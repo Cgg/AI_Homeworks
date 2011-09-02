@@ -2,6 +2,7 @@
 
 using namespace std;
 
+
 class TreeNode
 {
   public:
@@ -24,21 +25,47 @@ class TreeNode
     int  depth;
 };
 
+
 void GeneratePasswords
 (
   int length
 )
 {
-  // init LIFO with an empty node
+  vector< string > passwords;
 
-  TreeNode * currNode = new TreeNode( "", 0 );
+  // we use the depth-limited DFS implemented with a LIFO 
+  // stack< TreeNode > tree;
+  // TreeNode currNode
+  // vector< TreeNode > children
 
-  /*
-   * While some_condition do
-   *  curr_node
-   * FinWhile
+  /* Algo
+   *
+   * init tree with empty node
+   *
+   * While not tree.empty() do
+   *  curr_node = tree.top
+   *  
+   *  tree.pop
+   *
+   *  if curr_node.depth < lenght
+   *   children = curr_node.Expand()
+   *   tree += children // pseudo-code :)
+   *  else
+   *   password += currNode.value
+   *  fi
+   *
+   * EndWhile
    */
+
+   // print all the passwords
+   vector< string >::const_iterator pw_it;
+
+   for( pw_it = passwords.begin() ; pw_it != passwords.end() ; pw_it++ )
+   {
+     cout << *pw_it << endl;
+   }
 }
+
 
 int main
 (
