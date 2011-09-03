@@ -33,7 +33,7 @@ template< class T, class Expander > class TreeNode
     friend std::vector< TreeNode< T, Expander > > 
            Expander::Expand( TreeNode< T, Expander > * node );
 
-  public:
+  protected:
 
     T   value;
     int depth;
@@ -59,9 +59,10 @@ TreeNode< T, Expander >::TreeNode
 (
   T   value,
   int depth
-):
-  value( value ), depth( depth )
+)
 {
+  this->value = value;
+  this->depth = depth;
 }
 
 
