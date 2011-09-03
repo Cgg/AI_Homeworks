@@ -192,7 +192,15 @@ int main
   char ** argv
 )
 {
-  cout << "Hello world" << endl;
+  vector< string > passwords = GeneratePasswords( 4 );
+
+  // print all the passwords
+  vector< string >::const_iterator pw_it;
+
+  for( pw_it = passwords.begin() ; pw_it != passwords.end() ; pw_it++ )
+  {
+   cout << *pw_it << endl;
+  }
 
   return 0;
 }
