@@ -108,7 +108,7 @@ vector< TreeNode< string, StringExpanderHinter > > StringExpanderHinter::Expand
   
   vector< TN > result;
 
-  int nextDepth = node->depth++;
+  int nextDepth = node->depth + 1;
 
   if( nextDepth == 1 ) // first letter of passw is I or E
   {
@@ -172,15 +172,17 @@ vector< string > GeneratePasswords
     {
       children = currNode->Expand();
 
+      tree.pop();
+
       for( int i = 0 ; i < children.size() ; i++ )
         tree.push( children[ i ] );
     }
     else
     {
       passwords.push_back( currNode->Value() );
-    }
 
-    tree.pop();
+      tree.pop();
+    }
   }
 
    return passwords;
