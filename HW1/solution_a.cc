@@ -1,32 +1,146 @@
 #include <iostream>
+#include <vector>
+#include <stack>
 
 using namespace std;
 
 
-class TreeNode
+template< class T, class Expander > class TreeNode
 {
   public:
 
     TreeNode
     (
-      char value, // to make template
-      int  depth
+      T   value,
+      int depth
     );
 
-    // return TreeNodes or pointers or reference ?
-    std::vector< TreeNode > Expand // to make template
+    int Depth
+    (
+      void
+    );
+
+    T Value
+    (
+      void
+    );
+
+    std::vector< TreeNode< T, Expander > > Expand
     (
       void
     );
  
+    friend std::vector< TreeNode< T, Expander > > 
+           Expander::Expand( TreeNode< T, Expander > * node );
+
   public:
 
-    char value; // to make template
-    int  depth;
+    T   value;
+    int depth;
 };
 
 
-void GeneratePasswords
+class StringExpanderHinter
+{
+  public:
+  
+    static std::vector< TreeNode< string, StringExpanderHinter > > Expand
+    (
+      TreeNode< string, StringExpanderHinter > * node
+    );
+};
+
+
+/******************************************************************************
+ * Class TreeNode implementation
+ ******************************************************************************/
+template< class T, class Expander >
+TreeNode< T, Expander >::TreeNode
+(
+  T   value,
+  int depth
+):
+  value( value ), depth( depth )
+{
+}
+
+
+template< class T, class Expander >
+int TreeNode< T, Expander >::Depth
+(
+  void
+)
+{
+  return depth;
+}
+
+
+template< class T, class Expander >
+T TreeNode< T, Expander >::Value
+(
+  void
+)
+{
+  return value;
+}
+
+
+template< class T, class Expander >
+vector< TreeNode< T, Expander > > TreeNode< T, Expander >::Expand
+(
+  void
+)
+{
+  return Expander::Expand( this );
+}
+
+
+/******************************************************************************
+ * Class StringExpanderHinter implementation
+ ******************************************************************************/
+vector< TreeNode< string, StringExpanderHinter > > StringExpanderHinter::Expand
+(
+  TreeNode< string, StringExpanderHinter > * node
+)
+{
+  typedef TreeNode< string, StringExpanderHinter > TN;
+  
+  vector< TN > result;
+
+  int nextDepth = node->depth++;
+
+  if( nextDepth == 1 ) // first letter of passw is I or E
+  {
+    result.push_back( TN( string( 1, 'I' ), nextDepth ) );
+    result.push_back( TN( string( 1, 'E' ), nextDepth ) );
+  }
+  else    
+  {
+    string currPass = node->value;
+
+    switch( currPass[ currPass.length() - 1 ] )
+    {
+      case 'A':
+        result.push_back( TN( currPass + 'D', nextDepth ) );
+        result.push_back( TN( currPass + 'E', nextDepth ) );
+        break;
+
+      case 'G': // everything but A
+        for( int i = 'B'; i <= 'I' ; i++ ) // ARGH this is ugly xD
+          result.push_back( TN( currPass + char(i), nextDepth ) );
+        break;
+
+      default: // everything
+        for( int i = 'A'; i <= 'I' ; i++ ) // ARGH this is ugly xD
+          result.push_back( TN( currPass + char(i), nextDepth ) );
+        break;
+    }
+  }
+
+  return result;
+}
+
+
 (
   int length
 )
