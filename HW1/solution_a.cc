@@ -141,43 +141,48 @@ vector< TreeNode< string, StringExpanderHinter > > StringExpanderHinter::Expand
 }
 
 
+/******************************************************************************
+ * other functions' implementations
+ ******************************************************************************/
+vector< string > GeneratePasswords
 (
   int length
 )
 {
   vector< string > passwords;
 
+  typedef TreeNode< string, StringExpanderHinter > TN;
+
   // we use the depth-limited DFS implemented with a LIFO 
-  // stack< TreeNode > tree;
-  // TreeNode currNode
-  // vector< TreeNode > children
+  stack< TN > tree;
 
-  /* Algo
-   *
-   * init tree with empty node
-   *
-   * While not tree.empty() do
-   *  curr_node = tree.top
-   *  
-   *  tree.pop
-   *
-   *  if curr_node.depth < lenght
-   *   children = curr_node.Expand()
-   *   tree += children // pseudo-code :)
-   *  else
-   *   password += currNode.value
-   *  fi
-   *
-   * EndWhile
-   */
+  TN * currNode;
 
-   // print all the passwords
-   vector< string >::const_iterator pw_it;
+  vector< TN > children;
 
-   for( pw_it = passwords.begin() ; pw_it != passwords.end() ; pw_it++ )
-   {
-     cout << *pw_it << endl;
-   }
+  // init tree with empty node
+  tree.push( TN( string(), 0 ) );
+
+  while( !tree.empty() )
+  {
+    currNode = &( tree.top() );
+
+    if( currNode->Depth() < length )
+    {
+      children = currNode->Expand();
+
+      for( int i = 0 ; i < children.size() ; i++ )
+        tree.push( children[ i ] );
+    }
+    else
+    {
+      passwords.push_back( currNode->Value() );
+    }
+
+    tree.pop();
+  }
+
+   return passwords;
 }
 
 
