@@ -109,6 +109,29 @@ public:
         return mCell[pR*4+(pC>>1)];
     }
 
+    // returns the number of pieces (kings and men) for each player
+    void GetPiecesCount( char & ownPieceCount, char & ownKingCount,
+                         char & otherPieceCount, char & otherKingCount ) const
+    {
+      for( int i = 0 ; i < cSquares ; i++ )
+      {
+        if( At( i )  & CELL_OWN )
+        {
+          if( At( i ) & CELL_KING )
+            ownKingCount++;
+          else
+            ownPieceCount++;
+        }
+        else if ( A( i ) & CELL_OTHER )
+        {
+          if( At( i ) & CELL_KING )
+            otherKingCount++;
+          else
+            otherPieceCount++;
+        }
+      }
+    }
+
 private:
     ///private version of above function (allows modifying cells)
     uint8_t &PrivAt(int pR,int pC) const
