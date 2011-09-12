@@ -16,9 +16,9 @@ class CBoard
 public:
     static const int cSquares=32;		///< 32 valid squares
     static const int cPlayerPieces=12;	///< 12 pieces per player
-    
+
     ///if \p pInit is true, initializes the board to the starting position
-    
+
     ///Otherwise, leave uninitialized
     explicit CBoard(bool pInit=true)
     {
@@ -37,7 +37,7 @@ public:
     }
 
     ///constructs a board which is the result of applying move \p pMove to board \p pRH
-    
+
     /// \param pRH the starting board position
     /// \param pMove the movement to perform
     ///
@@ -45,7 +45,7 @@ public:
     CBoard(const CBoard &pRH,const CMove &pMove)
     {
         memcpy(mCell,pRH.mCell,sizeof(mCell));
-        
+
         DoMove(pMove);
     }
 
@@ -82,16 +82,16 @@ public:
         assert(pPos<cSquares);
         return mCell[pPos];
     }
-    
+
     ///operator version of the above function
     uint8_t operator()(int pPos) const
     {
         return At(pPos);
     }
-    
+
     ///returns the content of a cell in the board.
 
-    ///Rows are numbered (0 to 7) from the lower row in the board, 
+    ///Rows are numbered (0 to 7) from the lower row in the board,
     ///as seen by the player this program is playing.
     ///
     ///Columns are numbered starting from the right (also 0 to 7).
@@ -109,14 +109,14 @@ public:
         return mCell[pR*4+(pC>>1)];
     }
 
-private:    
+private:
     ///private version of above function (allows modifying cells)
     uint8_t &PrivAt(int pR,int pC) const
     {
         return const_cast<uint8_t&>(mCell[pR*4+(pC>>1)]);
     }
 
-public:    
+public:
     ///operator version of the above function
     uint8_t operator()(int pR,int pC) const
     {
@@ -128,7 +128,7 @@ public:
     {
         return (pCell>>2);
     }
-    
+
     ///returns the col corresponding to a cell index
     static int CellToCol(int pCell)
     {
@@ -137,9 +137,9 @@ public:
             lC++;
         return lC;
     }
-    
+
     ///returns the cell corresponding to a row and col
-    
+
     ///It doesn't check if it corresponds to a black square in the board,
     ///or if it falls within the board.
     ///
@@ -152,14 +152,14 @@ public:
 
 private:
     ///tries to make a jump from a certain position of the board
-    
+
     /// \param pMoves a vector where the valid moves will be inserted
     /// \param pOther the \ref ECell code corresponding to the player
     /// who is not making the move
     /// \param pR the row of the cell we are moving from
     /// \param pC the col
     /// \param pKing true if the moving piece is a king
-    /// \param pBuffer a buffer where the list of jump positions is 
+    /// \param pBuffer a buffer where the list of jump positions is
     /// inserted (for multiple jumps)
     /// \param pDepth the number of multiple jumps before this attempt
     bool TryJump(std::vector<CMove> &pMoves,int pOther,int pR,int pC,
@@ -212,7 +212,7 @@ private:
                 PrivAt(pR-1,pC+1)=lOldValue;
             }
         }
-        
+
         if(!lFound&&pDepth>0)
         {
             pMoves.push_back(CMove(pBuffer,pDepth+1));
@@ -222,7 +222,7 @@ private:
     }
 
     ///tries to make a move from a certain position
-    
+
     /// \param pMoves vector where the valid moves will be inserted
     /// \param pCell the cell where the move is tried from
     /// \param pOther the \ref ECell code corresponding to the player
@@ -256,18 +256,18 @@ private:
 
 public:
     /// returns a list of all valid moves for \p pWho
-    
+
     /// \param pMoves a vector where the list of moves will be appended
     /// \param pWho the \ref ECell code (CELL_OWN or CELL_OTHER) of the
     /// player making the move
     void FindPossibleMoves(std::vector<CMove> &pMoves,int pWho) const
     {
         pMoves.clear();
-    
+
         assert(pWho==CELL_OWN||pWho==CELL_OTHER);
 
         int lOther=pWho^(CELL_OWN|CELL_OTHER);
-    
+
         bool lFound=false;
         int lPieces[cPlayerPieces];
         uint8_t lMoveBuffer[cPlayerPieces];
@@ -299,14 +299,14 @@ public:
                 bool lIsKing=At(lCell)&CELL_KING;
                 TryMove(pMoves,lCell,lOther,lIsKing);
             }
-        }        
+        }
     }
-    
+
     ///transforms the board by performing a move
 
     ///it doesn't check that the move is valid, so you should only use
-    ///it with moves returned by FindPossibleMoves 
-    
+    ///it with moves returned by FindPossibleMoves
+
     /// \param pMove the move to perform
     void DoMove(const CMove &pMove)
     {
@@ -314,19 +314,19 @@ public:
         {
             int lSR=CellToRow(pMove[0]);
             int lSC=CellToCol(pMove[0]);
-        
+
             for(int i=1;i<pMove.Length();i++)
             {
                 int lDR=CellToRow(pMove[i]);
                 int lDC=CellToCol(pMove[i]);
-                
+
                 mCell[pMove[i]]=mCell[pMove[i-1]];
                 mCell[pMove[i-1]]=CELL_EMPTY;
 
                 if((lDR==7&&(mCell[pMove[i]]&CELL_OWN))||
                    (lDR==0&&(mCell[pMove[i]]&CELL_OTHER)))
                     mCell[pMove[i]]|=CELL_KING;
-        
+
                 ///now we have to remove the other one
                 if(lDR>lSR)
                 {
@@ -342,7 +342,7 @@ public:
                     else
                         mCell[RowColToCell(lDR+1,lDC+1)]=CELL_EMPTY;
                 }
-                
+
                 lSR=lDR;
                 lSC=lDC;
             }
@@ -360,7 +360,7 @@ public:
     }
 
     ///prints the board
-    
+
     ///Useful for debug purposes. Don't call it in the final version.
     void Print() const
     {
@@ -395,9 +395,9 @@ public:
         }
         std::cout << "\n";
     }
-    
+
     ///prints the board (no color version)
-    
+
     ///Useful for debug purposes. Don't call it in the final version.
     void PrintNoColor() const
     {
@@ -433,9 +433,9 @@ public:
         }
         std::cout << "----------------\n";
     }
-    
-private:   
-    //this is a bit ugly, but is useful for the implementation of 
+
+private:
+    //this is a bit ugly, but is useful for the implementation of
     //FindPossibleMoves. It won't affect in single-threaded programs
     //and you're not allowed to use threads anyway
     mutable uint8_t mCell[cSquares];

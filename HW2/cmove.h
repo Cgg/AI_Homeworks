@@ -30,7 +30,7 @@ public:
 
 public:
     ///constructs a special type move
-    
+
     ///\param pType should be one of MOVE_EOF or MOVE_BOG
     CMove(EMoveType pType=MOVE_NULL)
         :   mType(pType)
@@ -38,7 +38,7 @@ public:
     }
 
     ///constructs a normal move (not a jump)
-    
+
     ///\param p1 the source square
     ///\param p2 the destination square
     CMove(uint8_t p1,uint8_t p2)
@@ -49,7 +49,7 @@ public:
     }
 
     ///constructs a jump move
-    
+
     ///\param pData a series of squares that form the sequence of jumps
     ///\param pLen the number of squares in pData
     CMove(uint8_t *pData,std::size_t pLen)
@@ -57,34 +57,34 @@ public:
         ,   mData(pData,pLen)
     {
     }
-    
+
     ///reconstructs the move from a string
-    
+
     ///\param pString a string, which should have been previously generated
     ///by ToString(), or obtained from the server
     CMove(const std::string &pString)
     {
         std::istringstream lStream(pString);
-        
+
         lStream >> mType;
-        
+
         int lLen=0;
-        
+
         if(mType==MOVE_NORMAL)
             lLen=2;
         else if(mType>0)
             lLen=mType+1;
         else if(mType==MOVE_EOG)
             lLen=1;
-            
+
         if(lLen>12||mType<-3)
         {
             mType=MOVE_NULL;
             return;
         }
-            
+
         mData.resize(lLen);
-            
+
         for(int i=0;i<lLen;i++)
         {
             int lCell;
@@ -94,7 +94,7 @@ public:
                 mType=MOVE_NULL;
                 break;
             }
-            
+
             mData[i]=lCell;
         }
 
@@ -118,14 +118,14 @@ public:
 
     ///returns the type of the move
     int GetType() const			 {	 return mType;				}
-    
+
     ///returns (for normal moves and jumps) the number of squares
     std::size_t Length() const   {   return mData.length();    }
     ///returns the pNth square in the sequence
     uint8_t operator[](int pN) const   {   return mData[pN];    }
 
     ///transforms the moves from "seen by one player" to "seen by the other"
-    
+
     ///It is used internally by the server, and there is no reason to use it in client code
     void Invert()
     {
@@ -134,7 +134,7 @@ public:
             mData[i]=31-mData[i];
         }
     }
-    
+
     ///converts the move to a string so that it can be sent to the server
     std::string ToString() const
     {
@@ -144,7 +144,7 @@ public:
         {
             lStream << ' ' << (int)mData[i];
         }
-        
+
         return lStream.str();
     }
 
@@ -153,12 +153,12 @@ public:
     {
         if(mType!=pRH.mType) return false;
         if(mData.length()!=pRH.mData.length()) return false;
-        
+
         for(int i=0;i<mData.length();i++)
             if(mData[i]!=pRH.mData[i]) return false;
         return true;
     }
-    
+
 private:
     int mType;
     std::basic_string<uint8_t> mData;

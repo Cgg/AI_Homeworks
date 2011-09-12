@@ -14,20 +14,20 @@ class CPlayer
 {
 public:
     ///constructor
-    
-    ///Shouldn't do much. Any expensive initialization should be in 
+
+    ///Shouldn't do much. Any expensive initialization should be in
     ///Initialize
     CPlayer();
 
     ///called when waiting for the other player to move
-    
+
     ///\param pBoard the current state of the board
     ///\return false if we don't want this function to be called again
     ///until next move, true otherwise
     bool Idle(const CBoard &pBoard);
-    
+
     ///perform initialization of the player
-    
+
     ///\param pFirst true if we will move first, false otherwise
     ///\param pDue time before which we must have returned. To check,
     ///for example, to check if we have less than 100 ms to return, we can check if
