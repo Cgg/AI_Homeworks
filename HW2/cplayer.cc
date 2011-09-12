@@ -17,7 +17,7 @@ void CPlayer::Initialize(bool pFirst,const CTime &pDue)
 {
     srand(CTime::GetCurrent().Get());
 }
-    
+
 CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
 {
     //Use the commented version if your system supports ANSI color (linux does)
