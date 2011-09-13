@@ -2,28 +2,35 @@
 #define BOARD_STATE_H
 
 #include <vector>
-#include <limit>
+#include <limits>
 
 #include "constants.h"
 
 namespace chk
 {
 
+class CMove;
+class CBoard;
+
 class BoardState
 {
   public:
-    typedef H_Type int ;
 
-    static H_Type Min = numeric_limits< H_Type >::min();
-    static H_Type Max = numeric_limits< H_Type >::max();
+    typedef int H_Type;
 
-  private:
-    // put here constants and typedefs
+    static H_Type Min;
+    static H_Type Max;
 
-    static H_Type OWN_P_VAL = 1;
-    static H_Type OTH_P_VAL = -1;
-    static H_Type OWN_K_VAL = 2;
-    static H_Type OTH_K_VAL = -2;
+    static const int DL = 4; // depth limit for alphaBeta
+
+    struct Node
+    {
+      Node( CMove & move, CBoard & board ) :
+        moveToGetHere( move ), boardAtNode( board ) {}
+
+      CMove  & moveToGetHere;
+      CBoard & boardAtNode;
+    };
 
     enum Player
     {
@@ -31,11 +38,12 @@ class BoardState
       MinPlayer
     };
 
-    struct Node
-    {
-      CMove  & moveToGetHere;
-      CBoard & boardAtNode;
-    };
+  private:
+
+    static const H_Type OWN_P_VAL = 1;
+    static const H_Type OTH_P_VAL = -1;
+    static const H_Type OWN_K_VAL = 2;
+    static const H_Type OTH_K_VAL = -2;
 
   public:
 

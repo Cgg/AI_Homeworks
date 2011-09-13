@@ -1,8 +1,14 @@
 #include "board_state.h"
+#include "cboard.h"
+#include "cmove.h"
 
-using namespace std;
+namespace chk
+{
 
-H_Type BoardState::AlphaBeta
+BoardState::Min = std::numeric_limits< H_Type >::min();
+BoardState::Max = std::numeric_limits< H_Type >::max();
+
+BoardState::H_Type BoardState::AlphaBeta
 (
   Node   & origin,
   int      depth,
@@ -47,7 +53,10 @@ H_Type BoardState::AlphaBeta
   }
 }
 
-HType BoardState::computeHeuristic( const CBoard & pBoard )
+BoardState::HType BoardState::computeHeuristic
+(
+  const CBoard & pBoard
+)
 {
   // piece and king count for me (own) and the other player (oth)
   int ownPC;
@@ -61,27 +70,26 @@ HType BoardState::computeHeuristic( const CBoard & pBoard )
          H_King_Coeff  * ( ownKC - othKC );
 }
 
-std::vector< Node * > BoardState::expand
+void BoardState::expand
 (
   std::vector< Node > & expandedNodes,
   Node                & origin,
   Player                player
 )
 {
-  Node tmpNode;
-
   // find every possible moves from this state, generate corresponding
   // boards and create nodes
 
   std::vector< CMove > nextMoves;
-  board.FindPossibleMoves( nextMoves,  );
+  board.FindPossibleMoves( nextMoves, 0 ); // TODO
 
   std::vector< CMove >::const_iterator it_moves;
 
   for( it_moves = nextMoves.begin() ; it_moves != nextMoves.end() ; it_moves++)
   {
-    tmpNode.moveToGetHere = ( *it_moves );
-    tmpNode.boardAtNode   = pBoard.DoMove( *it_moves );
+    Board newBoard( pBoard, ( *it_moves ) );
+
+    Node tmpNode( ( *it_moves ), Board( pBoard, newBoard ) );
 
     result.push( tmpNode );
   }
@@ -89,3 +97,4 @@ std::vector< Node * > BoardState::expand
   return result;
 }
 
+}
