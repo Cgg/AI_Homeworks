@@ -32,7 +32,7 @@ class Node
 
     static const H_Type OWN_P_VAL = 1;
     static const H_Type OTH_P_VAL = -3;
-    static const H_Type OWN_K_VAL = 2;
+    static const H_Type OWN_K_VAL = 30;
     static const H_Type OTH_K_VAL = -30;
 
   // static methods

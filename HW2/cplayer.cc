@@ -5,6 +5,16 @@
 
 namespace chk
 {
+double CBoard::squareCoeff[32] = {
+      1, 1, 1, 1,
+      1, 1, 1, 1,
+      1, 1, 1, 1,
+      2, 4, 4, 2,
+      2, 4, 4, 2,
+      1, 1, 1, 1,
+      1, 1, 1, 1,
+      2, 2, 2, 2
+    };
 
 H_Type Node::Min = -1000000;//std::numeric_limits< H_Type >::min();
 H_Type Node::Max =  1000000;//std::numeric_limits< H_Type >::max();
@@ -66,10 +76,10 @@ H_Type Node::computeHeuristic
 )
 {
   // piece and king count for me (own) and the other player (oth)
-  int ownPC;
-  int ownKC;
-  int othPC;
-  int othKC;
+  float ownPC;
+  float ownKC;
+  float othPC;
+  float othKC;
 
   pBoard.GetPiecesCount( ownPC, ownKC, othPC, othKC );
 

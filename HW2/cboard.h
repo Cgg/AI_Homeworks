@@ -14,8 +14,11 @@ namespace chk {
 class CBoard
 {
 public:
+
     static const int cSquares=32;		///< 32 valid squares
     static const int cPlayerPieces=12;	///< 12 pieces per player
+
+    static double squareCoeff[32];
 
     ///if \p pInit is true, initializes the board to the starting position
 
@@ -110,8 +113,8 @@ public:
     }
 
     // returns the number of pieces (kings and men) for each player
-    void GetPiecesCount( int & ownPieceCount, int & ownKingCount,
-                         int & otherPieceCount, int & otherKingCount ) const
+    void GetPiecesCount( float & ownPieceCount, float & ownKingCount,
+                         float & otherPieceCount, float & otherKingCount ) const
     {
       for( int i = 0 ; i < cSquares ; i++ )
       {
@@ -119,22 +122,22 @@ public:
         {
           if( At( i ) & CELL_KING )
           {
-            ownKingCount++;
+            ownKingCount += squareCoeff[ i ];
           }
           else
           {
-            ownPieceCount++;
+            ownPieceCount += squareCoeff[ i ];
           }
         }
         else if ( At( i ) & CELL_OTHER )
         {
           if( At( i ) & CELL_KING )
           {
-            otherKingCount++;
+            otherKingCount += squareCoeff[ i ];
           }
           else
           {
-            otherPieceCount++;
+            otherPieceCount += squareCoeff[ i ];
           }
         }
       }
@@ -471,6 +474,7 @@ private:
     //and you're not allowed to use threads anyway
     mutable uint8_t mCell[cSquares];
 };
+
 
 /*namespace chk*/ }
 
