@@ -1,4 +1,6 @@
 #include "cplayer.h"
+#include "board_state.h"
+
 #include <cstdlib>
 
 namespace chk
@@ -31,20 +33,6 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
      * This skeleton returns a random movement instead.
      */
     return lMoves[rand()%lMoves.size()];
-}
-
-HType CPlayer::GetHeuristic( const CBoard & pBoard ) const
-{
-  // piece and king count for me (own) and the other player (oth)
-  int ownPC;
-  int ownKC;
-  int othPC;
-  int othKC;
-
-  pBoard( ownPC, ownKC, othPC, othKC );
-
-  return H_Piece_Coeff * ( ownPC - othPC ) +
-         H_King_Coeff * ( ownKC - othKC );
 }
 
 /*namespace chk*/ }

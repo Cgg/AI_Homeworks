@@ -41,8 +41,6 @@ public:
     ///\param pDue time before which we must have returned
     ///\return the move we make
     CMove Play(const CBoard &pBoard,const CTime &pDue);
-
-    int GetHeuristic( const CBoard & pBoard ) const;
 };
 
 /*namespace chk*/ }
