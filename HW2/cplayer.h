@@ -10,7 +10,7 @@
 namespace chk
 {
 
-typedef int H_Type;
+typedef double H_Type;
 
 enum Player
 {
@@ -23,7 +23,7 @@ class Node
   // static data
   public:
 
-    static const int DL = 4; // depth limit for alphaBeta
+    static const int DL = 9; // depth limit for alphaBeta
 
     static H_Type Min;
     static H_Type Max;
@@ -31,9 +31,9 @@ class Node
   protected:
 
     static const H_Type OWN_P_VAL = 1;
-    static const H_Type OTH_P_VAL = -1;
+    static const H_Type OTH_P_VAL = -3;
     static const H_Type OWN_K_VAL = 2;
-    static const H_Type OTH_K_VAL = -2;
+    static const H_Type OTH_K_VAL = -30;
 
   // static methods
   public:
