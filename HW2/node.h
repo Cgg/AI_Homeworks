@@ -1,50 +1,40 @@
-#ifndef BOARD_STATE_H
-#define BOARD_STATE_H
+#ifndef _NODE_H
+#define _NODE_H
 
 #include <vector>
 #include <limits>
 
-#include "constants.h"
+#include "cboard.h"
+#include "cmove.h"
 
-namespace chk
+namespace chk {
+
+typedef int H_Type;
+
+enum Player
 {
+  MaxPlayer,
+  MinPlayer
+};
 
-class CMove;
-class CBoard;
-
-class BoardState
+class Node
 {
+  // static data
   public:
 
-    typedef int H_Type;
+    static const int DL = 4; // depth limit for alphaBeta
 
     static H_Type Min;
     static H_Type Max;
 
-    static const int DL = 4; // depth limit for alphaBeta
-
-    struct Node
-    {
-      Node( CMove & move, CBoard & board ) :
-        moveToGetHere( move ), boardAtNode( board ) {}
-
-      CMove  & moveToGetHere;
-      CBoard & boardAtNode;
-    };
-
-    enum Player
-    {
-      MaxPlayer,
-      MinPlayer
-    };
-
-  private:
+  protected:
 
     static const H_Type OWN_P_VAL = 1;
     static const H_Type OTH_P_VAL = -1;
     static const H_Type OWN_K_VAL = 2;
     static const H_Type OTH_K_VAL = -2;
 
+  // static methods
   public:
 
     static H_Type AlphaBeta
@@ -69,8 +59,20 @@ class BoardState
     (
       CBoard const & board
     );
+
+  // non static methods and data
+  public:
+
+    Node( CMove & move, CBoard & board )
+      : moveToGetHere( move ), boardAtNode( board )
+    {
+    }
+
+    CMove  & moveToGetHere;
+    CBoard & boardAtNode;
 };
 
 }
 
-#endif // BOARD_STATE_H
+#endif // _NODE_H
+
