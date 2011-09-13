@@ -147,12 +147,12 @@ vector< TreeNode< string, StringExpanderHinter > > StringExpanderHinter::Expand
 /******************************************************************************
  * other functions' implementations
  ******************************************************************************/
-vector< string > GeneratePasswords
+int GeneratePasswords
 (
   int length
 )
 {
-  vector< string > passwords;
+  int result = 0;
 
   typedef TreeNode< string, StringExpanderHinter > TN;
 
@@ -181,13 +181,13 @@ vector< string > GeneratePasswords
     }
     else
     {
-      passwords.push_back( currNode->Value() );
+      result++;
 
       tree.pop();
     }
   }
 
-   return passwords;
+   return result;
 }
 
 
@@ -197,10 +197,10 @@ int main
   char ** argv
 )
 {
-  vector< string > passwords = GeneratePasswords( atoi( argv[ 1 ] ) );
+  int n_pass =  GeneratePasswords( atoi( argv[ 1 ] ) );
 
   // print the number of found passwords
-  cout << passwords.size() << endl;
+  cout << n_pass << endl;
 
   return 0;
 }
