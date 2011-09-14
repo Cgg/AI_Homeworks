@@ -5,15 +5,26 @@
 
 namespace chk
 {
-double CBoard::squareCoeff[32] = {
+double CBoard::squareManCoeff[32] = {
       1, 1, 1, 1,
+      2, 1, 1, 2,
+      2, 1, 1, 2,
+      3, 3, 3, 3,
+      3, 3, 3, 3,
+      2, 1, 1, 2,
+      2, 1, 1, 4,
+      4, 4, 4, 4
+    };
+
+double CBoard::squareKingCoeff[32] = {
+      5, 5, 5, 5,
+      5, 1, 1, 1,
       1, 1, 1, 1,
+      1, 4, 4, 1,
+      1, 4, 4, 1,
       1, 1, 1, 1,
-      2, 4, 4, 2,
-      2, 4, 4, 2,
-      1, 1, 1, 1,
-      1, 1, 1, 1,
-      2, 2, 2, 2
+      1, 1, 1, -6,
+      -6, -6, -6, -6
     };
 
 H_Type Node::Min = -1000000;//std::numeric_limits< H_Type >::min();
@@ -76,12 +87,12 @@ H_Type Node::computeHeuristic
 )
 {
   // piece and king count for me (own) and the other player (oth)
-  float ownPC;
-  float ownKC;
-  float othPC;
-  float othKC;
+  double ownPC;
+  double ownKC;
+  double othPC;
+  double othKC;
 
-  pBoard.GetPiecesCount( ownPC, ownKC, othPC, othKC );
+  pBoard.GetPiecesCountWeighted( ownPC, ownKC, othPC, othKC );
 
   return ( OWN_P_VAL * ownPC + OTH_P_VAL * othPC +
            OWN_K_VAL * ownKC + OTH_K_VAL * othKC );
