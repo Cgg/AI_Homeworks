@@ -1,30 +1,32 @@
 #include "cplayer.h"
 
+#include <cassert>
 #include <cstdlib>
 #include <algorithm>
+#include <memory>
 
 namespace chk
 {
 double CBoard::squareManCoeff[32] = {
       1, 1, 1, 1,
-      2, 1, 1, 2,
-      2, 1, 1, 2,
-      3, 3, 3, 3,
-      3, 3, 3, 3,
-      2, 1, 1, 2,
+      2, 1, 1, 1,
+      2, 1, 1, 1,
+      2, 2, 2, 1,
+      2, 2, 2, 1,
+      2, 1, 1, 1,
       2, 1, 1, 4,
       4, 4, 4, 4
     };
 
 double CBoard::squareKingCoeff[32] = {
-      5, 5, 5, 5,
-      5, 1, 1, 1,
+      6, 6, 6, 6,
+      6, 1, 1, 1,
       1, 1, 1, 1,
       1, 4, 4, 1,
       1, 4, 4, 1,
       1, 1, 1, 1,
-      1, 1, 1, -6,
-      -6, -6, -6, -6
+      1, 1, 1, -2,
+      -2, -2, -2, -2
     };
 
 H_Type Node::Min = -1000000;//std::numeric_limits< H_Type >::min();
@@ -39,41 +41,60 @@ H_Type Node::AlphaBeta
   Player   player
 )
 {
+  std::cout << "depth" << depth << std::endl;
+
   if( depth == 0 ) // we hit depth limit
   {
-    return computeHeuristic( origin.boardAtNode );
+    std::cout << "bottom leaf, value = " << origin.value << std::endl;
+
+    return origin.value;
   }
   else
   {
-    std::vector< Node > nodeChildren;
+    std::vector< Node > * nodeChildren = expand( origin, player );
 
-    expand( nodeChildren, origin, player );
+   assert( !nodeChildren->empty() ); // no children means no possible moves means terminal node
+
     std::vector< Node >::iterator it_ch;
 
     if( player == MaxPlayer )
     {
-      for( it_ch = nodeChildren.begin() ; it_ch != nodeChildren.end() ; it_ch++)
+      for( it_ch = nodeChildren->begin() ; it_ch != nodeChildren->end() ; it_ch++)
       {
-        alpha = std::max( alpha,
+        H_Type tmp = std::max( alpha,
                      AlphaBeta( (*it_ch), depth-1, alpha, beta, MinPlayer ));
+
+        std::cout << "alpha = " << tmp << std::endl;
+
+        alpha = tmp;
 
         if( beta <= alpha )
         {
+          std::cout << ">>>B p" << std::endl;
+
           break;
         }
+        return alpha;
       }
     }
     else
     {
-      for( it_ch = nodeChildren.begin() ; it_ch != nodeChildren.end() ; it_ch++)
+      for( it_ch = nodeChildren->begin() ; it_ch != nodeChildren->end() ; it_ch++)
       {
-        beta = std::min( beta,
-                    AlphaBeta( (*it_ch), depth-1, alpha, beta, MaxPlayer ));
+        H_Type tmp = std::min( beta,
+                        AlphaBeta( (*it_ch), depth-1, alpha, beta, MaxPlayer ) );
+
+        std::cout << "beta = " << tmp << std::endl;
+        beta = tmp;
 
         if( beta <= alpha )
         {
+          std::cout << ">>>A p" << std::endl;
+
           break;
         }
+
+        return beta;
       }
     }
   }
@@ -87,39 +108,41 @@ H_Type Node::computeHeuristic
 )
 {
   // piece and king count for me (own) and the other player (oth)
-  double ownPC;
-  double ownKC;
-  double othPC;
-  double othKC;
+  double ownPC = 0;
+  double ownKC = 0;
+  double othPC = 0;
+  double othKC = 0;
 
-  pBoard.GetPiecesCountWeighted( ownPC, ownKC, othPC, othKC );
+  pBoard.GetPiecesCount( ownPC, ownKC, othPC, othKC );
+
+  //std::cout << "my pieces = " << ownPC << std::endl;
 
   return ( OWN_P_VAL * ownPC + OTH_P_VAL * othPC +
            OWN_K_VAL * ownKC + OTH_K_VAL * othKC );
 }
 
-void Node::expand
+std::vector< Node > * Node::expand
 (
-  std::vector< Node > & expandedNodes,
   Node                & origin,
   Player                player
 )
 {
-  expandedNodes.clear();
+  std::vector< CMove > nextMoves;
+
+  origin.boardAtNode->FindPossibleMoves( nextMoves, ( player == MaxPlayer ? CELL_OWN : CELL_OTHER ) );
+
+  std::vector< Node > * expandedNodes = new std::vector< Node >;
+
+  expandedNodes->reserve( nextMoves.size() );
 
   // find every possible moves from this state, generate corresponding
   // boards and create nodes
-
-  std::vector< CMove > nextMoves;
-  origin.boardAtNode.FindPossibleMoves( nextMoves, ( player == MaxPlayer ? CELL_OWN : CELL_OTHER ) ); // TODO
 
   std::vector< CMove >::const_iterator it_moves;
 
   for( it_moves = nextMoves.begin() ; it_moves != nextMoves.end() ; it_moves++)
   {
-    CBoard newBoard( origin.boardAtNode, ( *it_moves ) );
-
-    expandedNodes.push_back( Node( ( *it_moves ), newBoard ) );
+    expandedNodes->push_back( Node( new CMove( *it_moves ), new CBoard( *(origin.boardAtNode), ( *it_moves ) ) ) );
   }
 
 }
@@ -160,10 +183,7 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
 
     for( it_move = lMoves.begin() ; it_move != lMoves.end() ; it_move++ )
     {
-      // ugly ?
-      CBoard originBoard = CBoard( pBoard, ( *it_move ) );
-
-      Node origin( ( *it_move ), originBoard );
+      Node origin( new CMove( *it_move ), new CBoard( pBoard, ( *it_move ) ) );
 
       // we do alphaBeta for each possible move. Since we have Max's
       // possible moves, it results in Min nodes, hence the MinPlayer

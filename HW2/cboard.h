@@ -53,6 +53,14 @@ public:
         DoMove(pMove);
     }
 
+    CBoard( CBoard const & rBoard )
+    {
+      for( int i = 0 ; i < cSquares ; i++ )
+      {
+        mCell[ i ] = rBoard.mCell[ i ] ;
+      }
+    }
+
     ///returns the content of a cell in the board.
 
     ///Cells are numbered as follows:

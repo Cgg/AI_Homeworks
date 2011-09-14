@@ -49,9 +49,8 @@ class Node
 
   protected:
 
-    static void expand
+    static std::vector< Node > * expand
     (
-      std::vector< Node > & expandedNodes, // return of the function
       Node                & origin, // node from where we extend
       Player                player  // who shall play (min or max)
     );
@@ -61,16 +60,43 @@ class Node
       CBoard const & board
     );
 
+    static bool comp
+    (
+      Node const & n1, Node const & n2
+    )
+    {
+      return ( n1.value < n2.value );
+    }
+
   // non static methods and data
   public:
 
-    Node( CMove const & move, CBoard const & board )
+    Node( CMove * move, CBoard * board )
       : moveToGetHere( move ), boardAtNode( board )
     {
+      value = computeHeuristic( *boardAtNode );
+
+      //std::cout << "initialization value = " << value << std::endl;
     }
 
-    CMove  moveToGetHere;
-    CBoard boardAtNode;
+    ~Node()
+    {
+      delete moveToGetHere;
+      delete boardAtNode;
+    }
+
+    Node( Node const & rNode )
+    {
+      value = rNode.value;
+      moveToGetHere = new CMove(*(rNode.moveToGetHere));
+      boardAtNode = new CBoard(*(rNode.boardAtNode));
+    }
+
+  private:
+
+    H_Type value;
+    CMove  * moveToGetHere;
+    CBoard * boardAtNode;
 };
 
 class CPlayer

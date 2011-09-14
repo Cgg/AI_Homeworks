@@ -1,5 +1,5 @@
 What does your method do?
- My method uses alpha-beta search algorithm with all the latest enhancements (Lu 1993). It had an average minimum search depth of 19 ply, excluding search extensions (one ply equals one move by one player)
+todo
 
  If your method was allowed an infite amount of time to make each move, would it be impossible to defeat it?
- Since the algorithm uses an admissible heuristic, the decission is optimal and my agent cannot lose.
+todo
