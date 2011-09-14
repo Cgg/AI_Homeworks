@@ -18,7 +18,8 @@ public:
     static const int cSquares=32;		///< 32 valid squares
     static const int cPlayerPieces=12;	///< 12 pieces per player
 
-    static double squareCoeff[32];
+    static double squareManCoeff[32];
+    static double squareKingCoeff[32];
 
     ///if \p pInit is true, initializes the board to the starting position
 
@@ -113,8 +114,8 @@ public:
     }
 
     // returns the number of pieces (kings and men) for each player
-    void GetPiecesCount( float & ownPieceCount, float & ownKingCount,
-                         float & otherPieceCount, float & otherKingCount ) const
+    void GetPiecesCount( double & ownPieceCount, double & ownKingCount,
+                         double & otherPieceCount, double & otherKingCount ) const
     {
       for( int i = 0 ; i < cSquares ; i++ )
       {
@@ -122,22 +123,51 @@ public:
         {
           if( At( i ) & CELL_KING )
           {
-            ownKingCount += squareCoeff[ i ];
+            ownKingCount++;
           }
           else
           {
-            ownPieceCount += squareCoeff[ i ];
+            ownPieceCount++;
           }
         }
         else if ( At( i ) & CELL_OTHER )
         {
           if( At( i ) & CELL_KING )
           {
-            otherKingCount += squareCoeff[ i ];
+            otherKingCount++;
           }
           else
           {
-            otherPieceCount += squareCoeff[ i ];
+            otherPieceCount++;
+          }
+        }
+      }
+    }
+    void GetPiecesCountWeighted( double & ownPieceCount, double & ownKingCount,
+                                 double & otherPieceCount, double & otherKingCount ) const
+    {
+      for( int i = 0 ; i < cSquares ; i++ )
+      {
+        if( At( i )  & CELL_OWN )
+        {
+          if( At( i ) & CELL_KING )
+          {
+            ownKingCount += squareKingCoeff[ i ];
+          }
+          else
+          {
+            ownPieceCount += squareManCoeff[ i ];
+          }
+        }
+        else if ( At( i ) & CELL_OTHER )
+        {
+          if( At( i ) & CELL_KING )
+          {
+            otherKingCount += squareKingCoeff[ i ];
+          }
+          else
+          {
+            otherPieceCount += squareManCoeff[ i ];
           }
         }
       }
