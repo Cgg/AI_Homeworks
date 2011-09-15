@@ -19,12 +19,12 @@ enum Player
 static const double SMALL = -1e6f;
 static const double BIG   =  1e6f;
 
-static const int DEPTH_L = 9;
+static const int DEPTH_L = 8;
 
 static const double OWN_P_VAL = 1.0f;
 static const double OWN_K_VAL = 2.0f;
-static const double OTH_P_VAL = -1.0f;
-static const double OTH_K_VAL = -3.0f;
+static const double OTH_P_VAL = -1.4f;
+static const double OTH_K_VAL = -2.8f;
 
 class Node
 {
@@ -53,6 +53,11 @@ class Node
     double computeHeuristic();
 
     std::vector< Node > * expand( bool isMaxNode );
+
+    static bool comp( Node const & n1, Node const n2 )
+    {
+      return ( n1.value < n2.value );
+    }
 
   private:
 

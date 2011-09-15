@@ -9,6 +9,28 @@
 namespace chk
 {
 
+double CBoard::squareManCoeff[32] = {
+      1, 1, 1, 1,
+      1, 1, 1, 1.2,
+      1, 1, 1, 1.2,
+      1.2, 1.5, 1.5, 1.5,
+      1.2, 1.5, 1.5, 1.5,
+      1, 1, 1, 1.2,
+      1, 1, 1, 2,
+      1.5, 2, 2, 2.2
+    };
+
+double CBoard::squareKingCoeff[32] = {
+      2, 2, 2, 2,
+      2, 1, 1, 1,
+      1, 1, 1, 1,
+      1, 1.5, 1.5, 1,
+      1, 1.5, 1.5, 1,
+      1, 1, 1, 1,
+      1, 1, 1, 1,
+      -1, 0, 0, 0
+    };
+
 double Node::AlphaBeta
 (
   bool   isMaxNode,
@@ -103,7 +125,7 @@ double Node::computeHeuristic
   double othPC = 0;
   double othKC = 0;
 
-  boardAtNode.GetPiecesCount( ownPC, ownKC, othPC, othKC );
+  boardAtNode.GetPiecesCountWeighted( ownPC, ownKC, othPC, othKC );
 
 #ifdef DEBUG
 //  std::cerr << "Node::computeH : My pieces amount = " << ownPC << std::endl;
@@ -125,13 +147,14 @@ std::vector< Node > * Node::expand
 
   boardAtNode.FindPossibleMoves(lMoves, ( isMaxNode ? CELL_OWN : CELL_OTHER ) );
 
-  // TODO reserve space for children before this loop.
   children->reserve( lMoves.size() );
 
   for( it_move = lMoves.begin() ; it_move != lMoves.end() ; it_move++ )
   {
     children->push_back( Node( boardAtNode, (*it_move) ) );
   }
+
+  std::sort( children->begin(), children->end(), comp );
 
 #ifdef DEBUG
   std::cerr << " Node::expand : " << children->size() << "children." << std::endl;
@@ -174,23 +197,27 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
 
     int bestMove = 0;
 
-    for( int i = 0 ; i < lMoves.size() ; i++ )
+    // no need to do that if there is only one available move
+    if( lMoves.size() > 1 )
     {
-      Node origin( pBoard, lMoves[ i ] );
-
-      tmpValue = origin.AlphaBeta( false );
-
-#ifdef DEBUG
-      std::cerr << "CPlayer::Play : Value for move " << i << " is " << tmpValue << std::endl;
-#endif
-
-      if( tmpValue > bestValue )
+      for( int i = 0 ; i < lMoves.size() ; i++ )
       {
+        Node origin( pBoard, lMoves[ i ] );
+
+        tmpValue = origin.AlphaBeta( false );
+
 #ifdef DEBUG
-        std::cerr << "We have a new best move, index is " << i << std::endl;
+        std::cerr << "CPlayer::Play : Value for move " << i << " is " << tmpValue << std::endl;
 #endif
-        bestValue = tmpValue;
-        bestMove  = i;
+
+        if( tmpValue > bestValue )
+        {
+#ifdef DEBUG
+          std::cerr << "We have a new best move, index is " << i << std::endl;
+#endif
+          bestValue = tmpValue;
+          bestMove  = i;
+        }
       }
     }
 

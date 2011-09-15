@@ -17,6 +17,9 @@ public:
     static const int cSquares=32;		///< 32 valid squares
     static const int cPlayerPieces=12;	///< 12 pieces per player
 
+    static double squareManCoeff[32];
+    static double squareKingCoeff[32];
+
     ///if \p pInit is true, initializes the board to the starting position
 
     ///Otherwise, leave uninitialized
@@ -102,6 +105,36 @@ public:
           else
           {
             otherPieceCount++;
+          }
+        }
+      }
+    }
+
+    void GetPiecesCountWeighted( double & ownPieceCount, double & ownKingCount,
+                                 double & otherPieceCount, double & otherKingCount ) const
+    {
+      for( int i = 0 ; i < cSquares ; i++ )
+      {
+        if( At( i )  & CELL_OWN )
+        {
+          if( At( i ) & CELL_KING )
+          {
+            ownKingCount += squareKingCoeff[ i ];
+          }
+          else
+          {
+            ownPieceCount += squareManCoeff[ i ];
+          }
+        }
+        else if ( At( i ) & CELL_OTHER )
+        {
+          if( At( i ) & CELL_KING )
+          {
+            otherKingCount += squareKingCoeff[ i ];
+          }
+          else
+          {
+            otherPieceCount += squareManCoeff[ i ];
           }
         }
       }
