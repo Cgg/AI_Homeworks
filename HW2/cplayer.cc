@@ -35,6 +35,7 @@ double CBoard::squareKingCoeff[32] = {
 double Node::AlphaBeta
 (
   bool   isMaxNode,
+  CTime const & pDue,
   int    depthLimit = DEPTH_L,
   double alpha      = SMALL,
   double beta       = BIG
@@ -45,7 +46,7 @@ double Node::AlphaBeta
             << " beta = " << beta << " player = " << isMaxNode << std::endl;
 #endif
 
-  if( depthLimit == 0 )
+  if( depthLimit == 0 || ( pDue - CTime::GetCurrent() ) < TIME_LIMIT )
   {
 #ifdef DEBUG
     std::cerr << "Node::AlpBet : bottom leaf, value = " << value << std::endl;
@@ -68,13 +69,18 @@ double Node::AlphaBeta
     }
 #endif
 */
+    if( children->empty() )
+    {
+      delete children;
+      return value;
+    }
 
     if( isMaxNode )
     {
       for( it_node = children->begin() ; it_node != children->end() ; it_node++ )
       {
         alpha = std::max( alpha,
-                (*it_node).AlphaBeta( !isMaxNode, depthLimit-1, alpha, beta ));
+                (*it_node).AlphaBeta( !isMaxNode, pDue, depthLimit-1, alpha, beta ));
 
 #ifdef DEBUG
         std::cerr << "depth = " << depthLimit << " alpha is now " << alpha << std::endl;
@@ -97,7 +103,7 @@ double Node::AlphaBeta
       for( it_node = children->begin() ; it_node != children->end() ; it_node++ )
       {
         beta = std::min( beta,
-                (*it_node).AlphaBeta( !isMaxNode, depthLimit-1, alpha, beta ));
+                (*it_node).AlphaBeta( !isMaxNode, pDue, depthLimit-1, alpha, beta ));
 
 #ifdef DEBUG
         std::cerr << "depth = " << depthLimit << " beta is now " << beta << std::endl;
@@ -206,7 +212,9 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
     double tmpValue  = 0;
     double bestValue = SMALL;
 
-    int bestMove = 0;
+    int bestMoveIdx = 0;
+
+    int DL = 2;
 
     // no need to do that if there is only one available move
     if( lMoves.size() > 1 )
@@ -215,32 +223,40 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
       std::cerr << ">>> Examining new move..." << std::endl;
 #endif
 
-      for( int i = 0 ; i < lMoves.size() ; i++ )
+      while( ( pDue - CTime::GetCurrent() ) > TIME_LIMIT )
       {
-        Node origin( pBoard, lMoves[ i ] );
-
-        tmpValue = origin.AlphaBeta( false );
-
-#ifdef DEBUG
-        std::cerr << "CPlayer::Play : Value for move " << i << " is " << tmpValue << std::endl;
-#endif
-
-        if( tmpValue > bestValue )
+        for( int i = 0 ; i < lMoves.size() ; i++ )
         {
+          Node origin( pBoard, lMoves[ i ] );
+
+          tmpValue = origin.AlphaBeta( false, pDue, DL );
+
 #ifdef DEBUG
-          std::cerr << "We have a new best move, index is " << i << std::endl;
+          std::cerr << "CPlayer::Play : Value for move " << i << " is " << tmpValue << std::endl;
 #endif
-          bestValue = tmpValue;
-          bestMove  = i;
+
+          if( tmpValue > bestValue )
+          {
+#ifdef DEBUG
+            std::cerr << "We have a new best move, index is " << i << std::endl;
+#endif
+            bestValue = tmpValue;
+            bestMoveIdx  = i;
+          }
         }
+
+        std::cout << ">>> Best move is move " << bestMoveIdx + 1 << " out of " << lMoves.size() << std::endl;
+
+        DL++;
       }
+      std::cout << ">>> Running out of time at depth " << DL << std::endl;
     }
 
 #ifdef DEBUG
-    std::cerr << ">>> Best move is move " << bestMove + 1 << " out of " << lMoves.size() << std::endl;
+    std::cerr << ">>> Best move is move " << bestMoveIdx + 1 << " out of " << lMoves.size() << std::endl;
 #endif
 
-    return lMoves[ bestMove ];
+    return lMoves[ bestMoveIdx ];
     //return lMoves[rand()%lMoves.size()];
 }
 

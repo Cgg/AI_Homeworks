@@ -16,6 +16,8 @@ enum Player
   MinP
 };
 
+static const int64_t TIME_LIMIT = 5e5;
+
 static const double SMALL = -1e6f;
 static const double BIG   =  1e6f;
 
@@ -27,8 +29,8 @@ static const double OWN_K_VAL = 2.0f;
 static const double OWN_D_VAL = 1.3f;
 static const double OWN_T_VAL = 1.6f;
 
-static const double OTH_P_VAL = -1.4f;
-static const double OTH_K_VAL = -2.8f;
+static const double OTH_P_VAL = -1.3f;
+static const double OTH_K_VAL = -2.5f;
 
 static const double OTH_D_VAL = -1.4f;
 static const double OTH_T_VAL = -1.8f;
@@ -50,6 +52,7 @@ class Node
     double AlphaBeta
     (
       bool   isMaxNode,
+      CTime const & pDue,
       int    depthLimit,
       double alpha,
       double beta
