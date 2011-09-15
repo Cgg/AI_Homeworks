@@ -16,7 +16,7 @@ enum Player
   MinP
 };
 
-static const int64_t TIME_LIMIT = 5e5;
+static const int64_t TIME_LIMIT = 1e4;
 
 static const double SMALL = -1e6f;
 static const double BIG   =  1e6f;
