@@ -15,13 +15,14 @@ struct BoardInfo
 {
   double ownP;
   double ownK;
-  double ownD;
-  double ownT;
 
   double othP;
   double othK;
-  double othD;
-  double othT;
+
+  BoardInfo()
+  {
+    ownP = ownK = othP = othK = 0;
+  }
 };
 
 ///represents a position in an 8x8 board
