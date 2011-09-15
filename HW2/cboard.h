@@ -10,6 +10,20 @@
 
 namespace chk {
 
+// Board information : amount of pieces, king, duo and trio for each player
+struct BoardInfo
+{
+  double ownP;
+  double ownK;
+  double ownD;
+  double ownT;
+
+  double othP;
+  double othK;
+  double othD;
+  double othT;
+};
+
 ///represents a position in an 8x8 board
 class CBoard
 {
@@ -81,32 +95,27 @@ public:
     ///   (lBoard.At(3)&CELL_KING)
     ///
 
-    void GetPiecesCountWeighted( double & ownPieceCount, double & ownKingCount,
-                                 double & otherPieceCount, double & otherKingCount ) const
+    void GetPiecesCountWeighted
+    (
+     BoardInfo & info
+    )
+      const
     {
       for( int i = 0 ; i < cSquares ; i++ )
       {
         if( At( i )  & CELL_OWN )
         {
-          if( At( i ) & CELL_KING )
-          {
-            ownKingCount += squareKingCoeff[ i ];
-          }
+          if( at_i & CELL_KING )
+            info.ownK += squareKingCoeff[ i ];
           else
-          {
-            ownPieceCount += squareManCoeff[ i ];
-          }
+            info.ownP += squareManCoeff[ i ];
         }
         else if ( At( i ) & CELL_OTHER )
         {
-          if( At( i ) & CELL_KING )
-          {
-            otherKingCount += squareKingCoeff[ i ];
-          }
+          if( at_i & CELL_KING )
+            info.othK += squareKingCoeff[ i ];
           else
-          {
-            otherPieceCount += squareManCoeff[ i ];
-          }
+            info.othP += squareManCoeff[ i ];
         }
       }
     }

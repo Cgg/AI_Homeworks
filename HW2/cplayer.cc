@@ -120,19 +120,16 @@ double Node::computeHeuristic
 )
 {
   // piece and king count for me (own) and the other player (oth)
-  double ownPC = 0;
-  double ownKC = 0;
-  double othPC = 0;
-  double othKC = 0;
+  BoardInfo info;
 
-  boardAtNode.GetPiecesCountWeighted( ownPC, ownKC, othPC, othKC );
+  boardAtNode.GetPiecesCountWeighted( info );
 
 #ifdef DEBUG
-//  std::cerr << "Node::computeH : My pieces amount = " << ownPC << std::endl;
+  std::cerr << "Node::computeH : My pieces amount = " << info.ownP << std::endl;
 #endif
 
-  return ( OWN_P_VAL * ownPC + OTH_P_VAL * othPC +
-           OWN_K_VAL * ownKC + OTH_K_VAL * othKC );
+  return ( OWN_P_VAL * info.ownP + OTH_P_VAL * info.othP +
+           OWN_K_VAL * info.ownK + OTH_K_VAL * info.othK );
 }
 
 std::vector< Node > * Node::expand
