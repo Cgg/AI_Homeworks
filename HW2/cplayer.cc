@@ -58,9 +58,16 @@ double Node::AlphaBeta
     std::vector< Node > * children = expand( isMaxNode );
     std::vector< Node >::iterator it_node;
 
+    /*
 #ifdef DEBUG
-    //assert( !children.empty() );
+    if( children->empty() )
+    {
+      std::cerr << children->empty() << children->size()<<std::endl;
+      boardAtNode.Print();
+      assert(false);
+    }
 #endif
+*/
 
     if( isMaxNode )
     {
@@ -79,7 +86,6 @@ double Node::AlphaBeta
 #endif
           break;
         }
-        return alpha;
       }
 
       delete children;
@@ -104,8 +110,6 @@ double Node::AlphaBeta
 #endif
           break;
         }
-
-        return beta;
       }
 
       delete children;
@@ -115,7 +119,7 @@ double Node::AlphaBeta
     delete children;
   }
 
-  return 0;
+  return value;
 }
 
 double Node::computeHeuristic
@@ -129,9 +133,11 @@ double Node::computeHeuristic
   boardAtNode.GetPiecesCountWeighted( info );
 
 #ifdef DEBUG
+  /*
   std::cerr << "Node::computeH : My pieces amount = " << info.ownP << std::endl;
   std::cerr << "Node::computeH : own duos = " << info.ownD << std::endl;
   std::cerr << "Node::computeH : own trios = " << info.ownT << std::endl;
+  */
 #endif
 
   return ( OWN_D_VAL * info.ownD + OWN_T_VAL * info.ownT +
@@ -162,7 +168,7 @@ std::vector< Node > * Node::expand
   std::sort( children->begin(), children->end(), comp );
 
 #ifdef DEBUG
-  std::cerr << " Node::expand : " << children->size() << "children." << std::endl;
+  std::cerr << " Node::expand : " << children->size() << " children." << std::endl;
 #endif
 
   return children;
@@ -205,6 +211,10 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
     // no need to do that if there is only one available move
     if( lMoves.size() > 1 )
     {
+#ifdef DEBUG
+      std::cerr << ">>> Examining new move..." << std::endl;
+#endif
+
       for( int i = 0 ; i < lMoves.size() ; i++ )
       {
         Node origin( pBoard, lMoves[ i ] );
