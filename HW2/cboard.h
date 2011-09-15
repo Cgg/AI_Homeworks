@@ -94,6 +94,7 @@ public:
     ///
     ///   (lBoard.At(3)&CELL_KING)
     ///
+    // maybe better to count trio and duo from the line above
 
     void GetPiecesCountWeighted
     (
@@ -101,17 +102,35 @@ public:
     )
       const
     {
+      uint8_t at_i   = 0;
+      uint8_t at_i_4 = 0;
+      uint8_t at_i_5 = 0;
+
       for( int i = 0 ; i < cSquares ; i++ )
       {
-        if( At( i )  & CELL_OWN )
+        at_i   = At( i );
+        at_i_4 = At( i + 4 );
+        at_i_5 = ( i % 4 == 0 ? At( i + 5 ) : -1 );
+
+        if( at_i  & CELL_OWN )
         {
+          if( at_i & at_i_4 & at_i_5 )
+            info.ownT++;
+          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
+            info.ownD++;
+
           if( at_i & CELL_KING )
             info.ownK += squareKingCoeff[ i ];
           else
             info.ownP += squareManCoeff[ i ];
         }
-        else if ( At( i ) & CELL_OTHER )
+        else if ( at_i & CELL_OTHER )
         {
+          if( at_i & at_i_4 & at_i_5 )
+            info.othT++;
+          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
+            info.othD++;
+
           if( at_i & CELL_KING )
             info.othK += squareKingCoeff[ i ];
           else

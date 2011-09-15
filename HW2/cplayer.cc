@@ -126,9 +126,13 @@ double Node::computeHeuristic
 
 #ifdef DEBUG
   std::cerr << "Node::computeH : My pieces amount = " << info.ownP << std::endl;
+  std::cerr << "Node::computeH : own duos = " << info.ownD << std::endl;
+  std::cerr << "Node::computeH : own trios = " << info.ownT << std::endl;
 #endif
 
-  return ( OWN_P_VAL * info.ownP + OTH_P_VAL * info.othP +
+  return ( OWN_D_VAL * info.ownD + OWN_T_VAL * info.ownT +
+           OTH_D_VAL * info.othD + OTH_T_VAL * info.othT +
+           OWN_P_VAL * info.ownP + OTH_P_VAL * info.othP +
            OWN_K_VAL * info.ownK + OTH_K_VAL * info.othK );
 }
 
