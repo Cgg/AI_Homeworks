@@ -197,7 +197,7 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
     double tmpValue  = 0;
     double bestValue = SMALL;
 
-    int bestMove = 0;
+    int bestMoveIdx = 0;
 
     // no need to do that if there is only one available move
     if( lMoves.size() > 1 )
@@ -218,16 +218,16 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
           std::cerr << "We have a new best move, index is " << i << std::endl;
 #endif
           bestValue = tmpValue;
-          bestMove  = i;
+          bestMoveIdx  = i;
         }
       }
     }
 
 #ifdef DEBUG
-    std::cerr << ">>> Best move is move " << bestMove + 1 << " out of " << lMoves.size() << std::endl;
+    std::cerr << ">>> Best move is move " << bestMoveIdx + 1 << " out of " << lMoves.size() << std::endl;
 #endif
 
-    return lMoves[ bestMove ];
+    return lMoves[ bestMoveIdx ];
     //return lMoves[rand()%lMoves.size()];
 }
 
