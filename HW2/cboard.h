@@ -80,35 +80,6 @@ public:
     ///
     ///   (lBoard.At(3)&CELL_KING)
     ///
-    void GetPiecesCount( double & ownPieceCount, double & ownKingCount,
-                         double & otherPieceCount, double & otherKingCount ) const
-    {
-      for( int i = 0 ; i < cSquares ; i++ )
-      {
-        if( At( i )  & CELL_OWN )
-        {
-          if( At( i ) & CELL_KING )
-          {
-            ownKingCount++;
-          }
-          else
-          {
-            ownPieceCount++;
-          }
-        }
-        else if ( At( i ) & CELL_OTHER )
-        {
-          if( At( i ) & CELL_KING )
-          {
-            otherKingCount++;
-          }
-          else
-          {
-            otherPieceCount++;
-          }
-        }
-      }
-    }
 
     void GetPiecesCountWeighted( double & ownPieceCount, double & ownKingCount,
                                  double & otherPieceCount, double & otherKingCount ) const
