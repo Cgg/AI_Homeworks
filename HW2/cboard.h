@@ -106,14 +106,14 @@ public:
       {
         if( At( i )  & CELL_OWN )
         {
-          if( at_i & CELL_KING )
+          if( At( i ) & CELL_KING )
             info.ownK += squareKingCoeff[ i ];
           else
             info.ownP += squareManCoeff[ i ];
         }
         else if ( At( i ) & CELL_OTHER )
         {
-          if( at_i & CELL_KING )
+          if( At( i ) & CELL_KING )
             info.othK += squareKingCoeff[ i ];
           else
             info.othP += squareManCoeff[ i ];
