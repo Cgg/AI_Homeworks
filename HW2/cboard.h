@@ -22,6 +22,11 @@ struct BoardInfo
   double othK;
   double othD;
   double othT;
+
+  BoardInfo()
+  {
+    ownP = ownK = ownD = ownT = othP = othK = othD = othT = 0;
+  }
 };
 
 ///represents a position in an 8x8 board
@@ -118,7 +123,7 @@ public:
       {
         at_i   = At( i );
         at_i_4 = At( i + 4 );
-        at_i_5 = ( i % 4 == 0 ? At( i + 5 ) : -1 );
+        at_i_5 = ( i % 4 == 0 ? At( i + 5 ) : CELL_INVALID );
 
         if( at_i  & CELL_OWN )
         {
@@ -149,7 +154,9 @@ public:
 
     uint8_t At(int pPos) const
     {
-        assert(pPos<cSquares);
+        if( pPos > cSquares || pPos < 0 )
+          return CELL_INVALID;
+
         return mCell[pPos];
     }
 
