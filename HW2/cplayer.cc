@@ -60,6 +60,11 @@ double Node::AlphaBeta
 #ifdef DEBUG
     //assert( !children.empty() );
 #endif
+    if( children.empty() )
+    {
+      delete children;
+      return value;
+    }
 
     if( isMaxNode )
     {
@@ -111,7 +116,7 @@ double Node::AlphaBeta
     delete children;
   }
 
-  return 0;
+  return value;
 }
 
 double Node::computeHeuristic
