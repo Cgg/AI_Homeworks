@@ -10,93 +10,66 @@
 namespace chk
 {
 
-typedef double H_Type;
-
 enum Player
 {
-  MaxPlayer,
-  MinPlayer
+  MaxP,
+  MinP
 };
+
+static const double SMALL = -1e6f;
+static const double BIG   =  1e6f;
+
+static const int DEPTH_L = 8;
+
+static const double OWN_P_VAL = 1.0f;
+static const double OWN_K_VAL = 2.0f;
+
+static const double OWN_D_VAL = 1.3f;
+static const double OWN_T_VAL = 1.6f;
+
+static const double OTH_P_VAL = -1.4f;
+static const double OTH_K_VAL = -2.8f;
+
+static const double OTH_D_VAL = -1.4f;
+static const double OTH_T_VAL = -1.8f;
 
 class Node
 {
-  // static data
   public:
 
-    static const int DL = 10; // depth limit for alphaBeta
+    Node( CBoard const & board, CMove const & move ) :
+      boardAtNode( board, move )
+    {
+      value = computeHeuristic();
 
-    static H_Type Min;
-    static H_Type Max;
+#ifdef DEBUG
+      std::cerr << "Node CTOR : value = " << value;
+#endif
+    }
 
-  protected:
-
-    static const H_Type OWN_P_VAL = 1;
-    static const H_Type OTH_P_VAL = -2;
-    static const H_Type OWN_K_VAL = 2;
-    static const H_Type OTH_K_VAL = -4;
-
-  // static methods
-  public:
-
-    static H_Type AlphaBeta
+    double AlphaBeta
     (
-      Node   & origin,
-      int      depth,
-      H_Type   alpha,
-      H_Type   beta,
-      Player   player
+      bool   isMaxNode,
+      int    depthLimit,
+      double alpha,
+      double beta
     );
 
-  protected:
+  private:
 
-    static std::vector< Node > * expand
-    (
-      Node                & origin, // node from where we extend
-      Player                player  // who shall play (min or max)
-    );
+    double computeHeuristic();
 
-    static H_Type computeHeuristic
-    (
-      CBoard const & board
-    );
+    std::vector< Node > * expand( bool isMaxNode );
 
-    static bool comp
-    (
-      Node const & n1, Node const & n2
-    )
+    static bool comp( Node const & n1, Node const n2 )
     {
       return ( n1.value < n2.value );
     }
 
-  // non static methods and data
-  public:
-
-    Node( CMove * move, CBoard * board )
-      : moveToGetHere( move ), boardAtNode( board )
-    {
-      value = computeHeuristic( *boardAtNode );
-
-      //std::cout << "initialization value = " << value << std::endl;
-    }
-
-    ~Node()
-    {
-      delete moveToGetHere;
-      delete boardAtNode;
-    }
-
-    Node( Node const & rNode )
-    {
-      value = rNode.value;
-      moveToGetHere = new CMove(*(rNode.moveToGetHere));
-      boardAtNode = new CBoard(*(rNode.boardAtNode));
-    }
-
   private:
 
-    H_Type value;
-    CMove  * moveToGetHere;
-    CBoard * boardAtNode;
+    double value; // value of the node
+    CBoard boardAtNode;
 };
 
 class CPlayer

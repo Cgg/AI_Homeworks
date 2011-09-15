@@ -10,11 +10,24 @@
 
 namespace chk {
 
+// Board information : amount of pieces, king, duo and trio for each player
+struct BoardInfo
+{
+  double ownP;
+  double ownK;
+  double ownD;
+  double ownT;
+
+  double othP;
+  double othK;
+  double othD;
+  double othT;
+};
+
 ///represents a position in an 8x8 board
 class CBoard
 {
 public:
-
     static const int cSquares=32;		///< 32 valid squares
     static const int cPlayerPieces=12;	///< 12 pieces per player
 
@@ -89,6 +102,51 @@ public:
     ///
     ///   (lBoard.At(3)&CELL_KING)
     ///
+    // maybe better to count trio and duo from the line above
+
+    void GetPiecesCountWeighted
+    (
+     BoardInfo & info
+    )
+      const
+    {
+      uint8_t at_i   = 0;
+      uint8_t at_i_4 = 0;
+      uint8_t at_i_5 = 0;
+
+      for( int i = 0 ; i < cSquares ; i++ )
+      {
+        at_i   = At( i );
+        at_i_4 = At( i + 4 );
+        at_i_5 = ( i % 4 == 0 ? At( i + 5 ) : -1 );
+
+        if( at_i  & CELL_OWN )
+        {
+          if( at_i & at_i_4 & at_i_5 )
+            info.ownT++;
+          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
+            info.ownD++;
+
+          if( at_i & CELL_KING )
+            info.ownK += squareKingCoeff[ i ];
+          else
+            info.ownP += squareManCoeff[ i ];
+        }
+        else if ( at_i & CELL_OTHER )
+        {
+          if( at_i & at_i_4 & at_i_5 )
+            info.othT++;
+          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
+            info.othD++;
+
+          if( at_i & CELL_KING )
+            info.othK += squareKingCoeff[ i ];
+          else
+            info.othP += squareManCoeff[ i ];
+        }
+      }
+    }
+
     uint8_t At(int pPos) const
     {
         assert(pPos<cSquares);
@@ -122,8 +180,8 @@ public:
     }
 
     // returns the number of pieces (kings and men) for each player
-    void GetPiecesCount( double & ownPieceCount, double & ownKingCount,
-                         double & otherPieceCount, double & otherKingCount ) const
+    void GetPiecesCount( int & ownPieceCount, int & ownKingCount,
+                         int & otherPieceCount, int & otherKingCount ) const
     {
       for( int i = 0 ; i < cSquares ; i++ )
       {
@@ -147,35 +205,6 @@ public:
           else
           {
             otherPieceCount++;
-          }
-        }
-      }
-    }
-    void GetPiecesCountWeighted( double & ownPieceCount, double & ownKingCount,
-                                 double & otherPieceCount, double & otherKingCount ) const
-    {
-      for( int i = 0 ; i < cSquares ; i++ )
-      {
-        if( At( i )  & CELL_OWN )
-        {
-          if( At( i ) & CELL_KING )
-          {
-            ownKingCount += squareKingCoeff[ i ];
-          }
-          else
-          {
-            ownPieceCount += squareManCoeff[ i ];
-          }
-        }
-        else if ( At( i ) & CELL_OTHER )
-        {
-          if( At( i ) & CELL_KING )
-          {
-            otherKingCount += squareKingCoeff[ i ];
-          }
-          else
-          {
-            otherPieceCount += squareManCoeff[ i ];
           }
         }
       }
@@ -513,10 +542,6 @@ private:
     mutable uint8_t mCell[cSquares];
 };
 
-
 /*namespace chk*/ }
 
 #endif
-
-
-
