@@ -25,8 +25,8 @@ static const int DEPTH_L = 8;
 
 static const double OWN_P_VAL = 1.0f;
 static const double OWN_K_VAL = 2.0f;
-static const double OTH_P_VAL = -1.0f;
-static const double OTH_K_VAL = -2.0f;
+static const double OTH_P_VAL = -1.3f;
+static const double OTH_K_VAL = -2.5f;
 
 class Node
 {
