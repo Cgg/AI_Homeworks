@@ -167,4 +167,3 @@ private:
 /*namespace chk*/ }
 
 #endif
-

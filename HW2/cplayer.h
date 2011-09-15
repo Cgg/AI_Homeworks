@@ -10,66 +10,53 @@
 namespace chk
 {
 
-typedef double H_Type;
-
 enum Player
 {
-  MaxPlayer,
-  MinPlayer
+  MaxP,
+  MinP
 };
+
+static const double SMALL = -1e6f;
+static const double BIG   =  1e6f;
+
+static const int DEPTH_L = 9;
+
+static const double OWN_P_VAL = 1.0f;
+static const double OWN_K_VAL = 2.0f;
+static const double OTH_P_VAL = -1.0f;
+static const double OTH_K_VAL = -3.0f;
 
 class Node
 {
-  // static data
   public:
 
-    static const int DL = 10; // depth limit for alphaBeta
-
-    static H_Type Min;
-    static H_Type Max;
-
-  protected:
-
-    static const H_Type OWN_P_VAL = 1;
-    static const H_Type OTH_P_VAL = -2;
-    static const H_Type OWN_K_VAL = 2;
-    static const H_Type OTH_K_VAL = -4;
-
-  // static methods
-  public:
-
-    static H_Type AlphaBeta
-    (
-      Node   & origin,
-      int      depth,
-      H_Type   alpha,
-      H_Type   beta,
-      Player   player
-    );
-
-  protected:
-
-    static void expand
-    (
-      std::vector< Node > & expandedNodes, // return of the function
-      Node                & origin, // node from where we extend
-      Player                player  // who shall play (min or max)
-    );
-
-    static H_Type computeHeuristic
-    (
-      CBoard const & board
-    );
-
-  // non static methods and data
-  public:
-
-    Node( CMove const & move, CBoard const & board )
-      : moveToGetHere( move ), boardAtNode( board )
+    Node( CBoard const & board, CMove const & move ) :
+      boardAtNode( board, move )
     {
+      value = computeHeuristic();
+
+#ifdef DEBUG
+      std::cerr << "Node CTOR : value = " << value;
+#endif
     }
 
-    CMove  moveToGetHere;
+    double AlphaBeta
+    (
+      bool   isMaxNode,
+      int    depthLimit,
+      double alpha,
+      double beta
+    );
+
+  private:
+
+    double computeHeuristic();
+
+    std::vector< Node > * expand( bool isMaxNode );
+
+  private:
+
+    double value; // value of the node
     CBoard boardAtNode;
 };
 

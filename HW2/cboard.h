@@ -14,12 +14,8 @@ namespace chk {
 class CBoard
 {
 public:
-
     static const int cSquares=32;		///< 32 valid squares
     static const int cPlayerPieces=12;	///< 12 pieces per player
-
-    static double squareManCoeff[32];
-    static double squareKingCoeff[32];
 
     ///if \p pInit is true, initializes the board to the starting position
 
@@ -81,6 +77,36 @@ public:
     ///
     ///   (lBoard.At(3)&CELL_KING)
     ///
+    void GetPiecesCount( double & ownPieceCount, double & ownKingCount,
+                         double & otherPieceCount, double & otherKingCount ) const
+    {
+      for( int i = 0 ; i < cSquares ; i++ )
+      {
+        if( At( i )  & CELL_OWN )
+        {
+          if( At( i ) & CELL_KING )
+          {
+            ownKingCount++;
+          }
+          else
+          {
+            ownPieceCount++;
+          }
+        }
+        else if ( At( i ) & CELL_OTHER )
+        {
+          if( At( i ) & CELL_KING )
+          {
+            otherKingCount++;
+          }
+          else
+          {
+            otherPieceCount++;
+          }
+        }
+      }
+    }
+
     uint8_t At(int pPos) const
     {
         assert(pPos<cSquares);
@@ -114,8 +140,8 @@ public:
     }
 
     // returns the number of pieces (kings and men) for each player
-    void GetPiecesCount( double & ownPieceCount, double & ownKingCount,
-                         double & otherPieceCount, double & otherKingCount ) const
+    void GetPiecesCount( int & ownPieceCount, int & ownKingCount,
+                         int & otherPieceCount, int & otherKingCount ) const
     {
       for( int i = 0 ; i < cSquares ; i++ )
       {
@@ -139,35 +165,6 @@ public:
           else
           {
             otherPieceCount++;
-          }
-        }
-      }
-    }
-    void GetPiecesCountWeighted( double & ownPieceCount, double & ownKingCount,
-                                 double & otherPieceCount, double & otherKingCount ) const
-    {
-      for( int i = 0 ; i < cSquares ; i++ )
-      {
-        if( At( i )  & CELL_OWN )
-        {
-          if( At( i ) & CELL_KING )
-          {
-            ownKingCount += squareKingCoeff[ i ];
-          }
-          else
-          {
-            ownPieceCount += squareManCoeff[ i ];
-          }
-        }
-        else if ( At( i ) & CELL_OTHER )
-        {
-          if( At( i ) & CELL_KING )
-          {
-            otherKingCount += squareKingCoeff[ i ];
-          }
-          else
-          {
-            otherPieceCount += squareManCoeff[ i ];
           }
         }
       }
@@ -505,10 +502,6 @@ private:
     mutable uint8_t mCell[cSquares];
 };
 
-
 /*namespace chk*/ }
 
 #endif
-
-
-
