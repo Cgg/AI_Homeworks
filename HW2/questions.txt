@@ -4,10 +4,11 @@ node. To expand the tree, I generate every possible move from the current
 node and generate corresponding boards (ie nodes).
 As a heuristic, I take into account my amount of men/kings and the one of
 the ennemy. Board's squares are also weighted, with a set for the men and
-another one for the king, which allows me to "push" my men toward the end
+another one for the kings, which allows me to "push" my men toward the end
 of the board (to crown them), and then to "pull" my kings back toward me.
-I also detect powerful patterns on the board, such as duos and
-trios of men/kings.
+I also use iterative deepening for my alpha beta search, which allows me to
+take fully advantage of my 10 sec timeslot (average reached depth is about
+10 on my netbook).
 
 If your method was allowed an infite amount of time to make each move, would it be impossible to defeat it?
 Since I use a reasonnable heuristic, my method could at least not lose,
