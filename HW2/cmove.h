@@ -105,6 +105,12 @@ public:
         }
     }
 
+    CMove( CMove const & rMove )
+    {
+      mType = rMove.mType;
+      mData = std::basic_string<uint8_t>( rMove.mData );
+    }
+
     ///returns true if the movement is null or invalid
     bool IsNull() const			 {	 return (mType==MOVE_NULL); }
     ///returns true if the movement marks beginning of game

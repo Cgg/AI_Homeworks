@@ -25,8 +25,15 @@ static const int DEPTH_L = 8;
 
 static const double OWN_P_VAL = 1.0f;
 static const double OWN_K_VAL = 2.0f;
+
+static const double OWN_D_VAL = 1.3f;
+static const double OWN_T_VAL = 1.6f;
+
 static const double OTH_P_VAL = -1.3f;
 static const double OTH_K_VAL = -2.5f;
+
+static const double OTH_D_VAL = -1.4f;
+static const double OTH_T_VAL = -1.8f;
 
 class Node
 {
@@ -80,7 +87,7 @@ public:
     ///Initialize
     CPlayer();
 
-    ///called when waiting for the other player to move
+    ///called when waiting for the other player to move:
 
     ///\param pBoard the current state of the board
     ///\return false if we don't want this function to be called again

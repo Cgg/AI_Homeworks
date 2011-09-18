@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <algorithm>
+#include <memory>
 
 //#define DEBUG // the infamous
 
@@ -58,9 +59,16 @@ double Node::AlphaBeta
     std::vector< Node > * children = expand( isMaxNode );
     std::vector< Node >::iterator it_node;
 
+    /*
 #ifdef DEBUG
-    //assert( !children.empty() );
+    if( children->empty() )
+    {
+      std::cerr << children->empty() << children->size()<<std::endl;
+      boardAtNode.Print();
+      assert(false);
+    }
 #endif
+*/
     if( children->empty() )
     {
       delete children;
@@ -145,10 +153,16 @@ double Node::computeHeuristic
   boardAtNode.GetPiecesCountWeighted( info );
 
 #ifdef DEBUG
+  /*
   std::cerr << "Node::computeH : My pieces amount = " << info.ownP << std::endl;
+  std::cerr << "Node::computeH : own duos = " << info.ownD << std::endl;
+  std::cerr << "Node::computeH : own trios = " << info.ownT << std::endl;
+  */
 #endif
 
-  return ( OWN_P_VAL * info.ownP + OTH_P_VAL * info.othP +
+  return ( OWN_D_VAL * info.ownD + OWN_T_VAL * info.ownT +
+           OTH_D_VAL * info.othD + OTH_T_VAL * info.othT +
+           OWN_P_VAL * info.ownP + OTH_P_VAL * info.othP +
            OWN_K_VAL * info.ownK + OTH_K_VAL * info.othK );
 }
 
@@ -174,7 +188,7 @@ std::vector< Node > * Node::expand
   std::sort( children->begin(), children->end(), comp );
 
 #ifdef DEBUG
-  std::cerr << " Node::expand : " << children->size() << "children." << std::endl;
+  std::cerr << " Node::expand : " << children->size() << " children." << std::endl;
 #endif
 
   return children;
@@ -219,6 +233,10 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
     // no need to do that if there is only one available move
     if( lMoves.size() > 1 )
     {
+#ifdef DEBUG
+      std::cerr << ">>> Examining new move..." << std::endl;
+#endif
+
       while( ( pDue - CTime::GetCurrent() ) > TIME_LIMIT )
       {
         for( int i = 0 ; i < lMoves.size() ; i++ )

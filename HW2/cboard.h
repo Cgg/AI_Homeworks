@@ -15,13 +15,17 @@ struct BoardInfo
 {
   double ownP;
   double ownK;
+  double ownD;
+  double ownT;
 
   double othP;
   double othK;
+  double othD;
+  double othT;
 
   BoardInfo()
   {
-    ownP = ownK = othP = othK = 0;
+    ownP = ownK = ownD = ownT = othP = othK = othD = othT = 0;
   }
 };
 
@@ -67,6 +71,14 @@ public:
         DoMove(pMove);
     }
 
+    CBoard( CBoard const & rBoard )
+    {
+      for( int i = 0 ; i < cSquares ; i++ )
+      {
+        mCell[ i ] = rBoard.mCell[ i ] ;
+      }
+    }
+
     ///returns the content of a cell in the board.
 
     ///Cells are numbered as follows:
@@ -95,6 +107,7 @@ public:
     ///
     ///   (lBoard.At(3)&CELL_KING)
     ///
+    // maybe better to count trio and duo from the line above
 
     void GetPiecesCountWeighted
     (
@@ -102,18 +115,36 @@ public:
     )
       const
     {
+      uint8_t at_i   = 0;
+      uint8_t at_i_4 = 0;
+      uint8_t at_i_5 = 0;
+
       for( int i = 0 ; i < cSquares ; i++ )
       {
-        if( At( i )  & CELL_OWN )
+        at_i   = At( i );
+        at_i_4 = At( i + 4 );
+        at_i_5 = ( i % 4 == 0 ? At( i + 5 ) : CELL_INVALID );
+
+        if( at_i  & CELL_OWN )
         {
-          if( At( i ) & CELL_KING )
+          if( at_i & at_i_4 & at_i_5 )
+            info.ownT++;
+          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
+            info.ownD++;
+
+          if( at_i & CELL_KING )
             info.ownK += squareKingCoeff[ i ];
           else
             info.ownP += squareManCoeff[ i ];
         }
-        else if ( At( i ) & CELL_OTHER )
+        else if ( at_i & CELL_OTHER )
         {
-          if( At( i ) & CELL_KING )
+          if( at_i & at_i_4 & at_i_5 )
+            info.othT++;
+          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
+            info.othD++;
+
+          if( at_i & CELL_KING )
             info.othK += squareKingCoeff[ i ];
           else
             info.othP += squareManCoeff[ i ];
@@ -123,7 +154,9 @@ public:
 
     uint8_t At(int pPos) const
     {
-        assert(pPos<cSquares);
+        if( pPos > cSquares || pPos < 0 )
+          return CELL_INVALID;
+
         return mCell[pPos];
     }
 
