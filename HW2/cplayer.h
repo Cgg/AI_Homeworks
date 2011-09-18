@@ -32,8 +32,8 @@ class Node
 {
   public:
 
-    Node( CBoard const & board, CMove const & move ) :
-      boardAtNode( board, move )
+    Node( CBoard const & board, CMove const & move, bool capture ) :
+      boardAtNode( board, move ), isCapture( capture )
     {
       value = computeHeuristic();
 
@@ -53,6 +53,8 @@ class Node
 
   private:
 
+    bool cutOff( int depth, CTime const & pDue );
+
     double computeHeuristic();
 
     std::vector< Node > * expand( bool isMaxNode );
@@ -64,6 +66,7 @@ class Node
 
   private:
 
+    bool   isCapture;
     double value; // value of the node
     CBoard boardAtNode;
 };

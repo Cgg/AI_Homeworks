@@ -45,7 +45,7 @@ double Node::AlphaBeta
             << " beta = " << beta << " player = " << isMaxNode << std::endl;
 #endif
 
-  if( depthLimit == 0 || ( pDue - CTime::GetCurrent() ) < TIME_LIMIT )
+  if( cutOff( depthLimit, pDue ) )
   {
 #ifdef DEBUG
     std::cerr << "Node::AlpBet : bottom leaf, value = " << value << std::endl;
@@ -120,6 +120,20 @@ double Node::AlphaBeta
   return value;
 }
 
+bool Node::cutOff( int depth, CTime const & pDue )
+{
+  if( ( pDue - CTime::GetCurrent() ) < TIME_LIMIT )
+  {
+    return true;
+  }
+  else if ( depth <= 0 )
+  {
+    return !isCapture;
+  }
+
+  return false;
+}
+
 double Node::computeHeuristic
 (
   void
@@ -154,7 +168,7 @@ std::vector< Node > * Node::expand
 
   for( it_move = lMoves.begin() ; it_move != lMoves.end() ; it_move++ )
   {
-    children->push_back( Node( boardAtNode, (*it_move) ) );
+    children->push_back( Node( boardAtNode, (*it_move), it_move->IsJump() ) );
   }
 
   std::sort( children->begin(), children->end(), comp );
@@ -209,7 +223,7 @@ CMove CPlayer::Play(const CBoard &pBoard,const CTime &pDue)
       {
         for( int i = 0 ; i < lMoves.size() ; i++ )
         {
-          Node origin( pBoard, lMoves[ i ] );
+          Node origin( pBoard, lMoves[ i ], false );
 
           tmpValue = origin.AlphaBeta( false, pDue, DL );
 
