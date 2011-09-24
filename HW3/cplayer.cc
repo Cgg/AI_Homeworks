@@ -29,7 +29,7 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
      * Here you should write your clever algorithms to guess the species of each alive bird.
      * This skeleton guesses that all of them are white... they were the most likely after all!
      */
-     
+
     for(int i=0;i<pDucks.size();i++)
     {
          if(pDucks[i].IsAlive())

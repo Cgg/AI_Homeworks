@@ -22,12 +22,12 @@ int main(int pArgC,char **pArgs)
         std::cerr << "this version can only run in STANDALONE mode\n";
         return false;
     }
-    
+
     for(int i=4;i<pArgC;i++)
     {
         lArgs+=" ";
         lArgs+=pArgs[i];
     }
-    
+
     lClient.Run(pArgs[1],pArgs[2],lArgs,lStandalone);
 }

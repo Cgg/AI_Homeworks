@@ -20,12 +20,12 @@ public:
 
     ///length of the sequence of past actions of the duck
     int GetSeqLength() const			{	return mSeq.size();		}
-    
+
     ///returns the last action of the duck
     const CAction &GetLastAction() const	{	return GetAction(mSeq.size()-1);	}
     ///returns one action in the sequence of actions of the duck
     const CAction &GetAction(int i) const	{	return mSeq[i];		}
-    
+
     ///returns true if the duck is dead
     bool IsDead() const				{	return GetLastAction().IsDead();	}
     ///returns true if the duck was dead at time step i
@@ -47,7 +47,7 @@ private:
 
     std::vector<CAction> mSeq;
     ESpecies mSpecies;
-    
+
     friend class CClient;
 };
 

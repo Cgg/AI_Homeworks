@@ -12,7 +12,7 @@ class CPlayer
 {
 public:
     ///constructor
-    
+
     ///There is no data in the beginning, so not much should be done here.
     CPlayer();
 
@@ -29,7 +29,7 @@ public:
     ///Check their documentation for more information.
     ///\param pState the state object
     ///\param pDue time before which we must have returned
-    ///\return the position we want to shoot at, or cDontShoot if we 
+    ///\return the position we want to shoot at, or cDontShoot if we
     ///prefer to pass
     CAction Shoot(const CState &pState,const CTime &pDue);
 
@@ -47,7 +47,7 @@ public:
 
     ///This function will be called whenever you hit a duck.
     ///\param pDuck the duck index
-    ///\param pSpecies the species of the duck (it will also be set for this duck in pState from now on)    
+    ///\param pSpecies the species of the duck (it will also be set for this duck in pState from now on)
     void Hit(int pDuck,ESpecies pSpecies);
 };
 

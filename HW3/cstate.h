@@ -24,12 +24,12 @@ struct CState
     int MyScore() const				{	return mScores[mWhoIAm];	}
     ///returns the score of the i-th player
     int GetScore(int i) const			{	return mScores[i];			}
-    
+
     ///returns the number of turns elapsed since last time Shoot was called.
-    
+
     ///this is the amount of new data available for each duck
     int GetNumNewTurns() const		{	return mNumNewTurns;	}
-    
+
 private:
     CState() {}
     CState(const CState&);
@@ -37,9 +37,9 @@ private:
     std::vector<CDuck> mDucks;
     std::vector<int> mScores;
     int mWhoIAm;
-    
+
     int mNumNewTurns;
-    
+
     friend class CClient;
 };
 

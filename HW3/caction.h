@@ -15,11 +15,11 @@ namespace ducks {
 struct CAction
 {
     ///construct a bird action object
-    
+
     /// \param pBirdNumber the bird index
     /// \param pHorz the horizontal action of the bird
     /// \param pVert the horizontal action of the bird
-    /// \param pMovement the movement of the bird 
+    /// \param pMovement the movement of the bird
     CAction(int pBirdNumber,EAction pHorz,EAction pVert,int pMovement)
         :	mBirdNumber(pBirdNumber)
         ,	mHorz(pHorz)
@@ -37,9 +37,9 @@ struct CAction
     EAction GetHAction() const	{	return mHorz;	}
     ///the vertical action (one of ACTION_ACCELERATE, ACTION_KEEPSPEED or ACTION_STOP)
     EAction GetVAction() const	{	return mVert;	}
-    
+
     ///the movement of the bird
-    
+
     ///can be either BIRD_STOPPED or a combination of one or two of MOVE_WEST, MOVE_EAST, MOVE_UP and MOVE_DOWN
     /// for example, MOVE_WEST|MOVE_UP  or MOVE_EAST or MOVE_EAST|MOVE_DOWN
     /// of course, MOVE_WEST can't be combined with MOVE_EAST and MOVE_UP can't be combined with MOVE_DOWN
@@ -47,7 +47,7 @@ struct CAction
 
     ///represents a no-shoot action
     bool IsDontShoot() const	{	return (mBirdNumber==-1);	}
-    
+
     ///prints the content of this action object
     void Print() const
     {
@@ -56,7 +56,7 @@ struct CAction
         else
         {
             std::cout << mBirdNumber << " ";
-        
+
             if(IsDead())
                 std::cout << "DEAD DUCK";
             else
@@ -65,15 +65,15 @@ struct CAction
                     std::cout << "ACCELERATE ";
                 else if(mHorz==ACTION_KEEPSPEED)
                     std::cout << "KEEPSPEED ";
-                else 
+                else
                     std::cout << "STOP ";
                 if(mVert==ACTION_ACCELERATE)
                     std::cout << "ACCELERATE";
                 else if(mVert==ACTION_KEEPSPEED)
                     std::cout << "KEEPSPEED";
-                else 
+                else
                     std::cout << "STOP";
-            
+
                 if(mMovement==BIRD_STOPPED)
                     std::cout << " STOPPED";
                 else
@@ -91,7 +91,7 @@ struct CAction
             std::cout << std::endl;
         }
     }
-    
+
 private:
     int mBirdNumber;
     EAction mHorz,mVert;

@@ -29,19 +29,19 @@ private:
 
 public:
     ///runs the client
-    
+
     ///\param pHost the host to connect to
     ///\param pPort the port to connect to
     ///\param pKey the key to send to the server. If it is empty, connect
     ///in standalone mode
     void Run(const std::string &pHost,const std::string &pPort,
              const std::string &pArgs,bool pStandalone);
-    
+
 private:
     CPlayer &mPlayer;
     CState mState;
     CSocket mSocket;
-    
+
     bool mStandalone;
 };
 
