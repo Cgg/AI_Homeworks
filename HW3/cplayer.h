@@ -8,6 +8,14 @@
 namespace ducks
 {
 
+  enum EBehavior
+  {
+    B_MIGRATING,
+    B_QUACKING,
+    B_PANICKING,
+    B_FEIGNING   // feigning death (suckers)
+  };
+
 class CPlayer
 {
 public:
