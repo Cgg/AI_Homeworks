@@ -9,6 +9,7 @@ of the board (to crown them), and then to "pull" my kings back toward me.
 I also use iterative deepening for my alpha beta search, which allows me to
 take fully advantage of my 10 sec timeslot (average reached depth is about
 10 on my netbook).
+Finally, the finally state that are 'unquiet' (resulting from a jump, likely to end up in another jump from the opponent) are expanded on level further, to check that it is an advantage for me (reducing the horizon effect).
 
 If your method was allowed an infite amount of time to make each move, would it be impossible to defeat it?
 Since I use a reasonnable heuristic, my method could at least not lose,

@@ -15,17 +15,15 @@ struct BoardInfo
 {
   double ownP;
   double ownK;
-  double ownD;
-  double ownT;
 
   double othP;
   double othK;
-  double othD;
-  double othT;
+
+  double placementBonus;
 
   BoardInfo()
   {
-    ownP = ownK = ownD = ownT = othP = othK = othD = othT = 0;
+    ownP = ownK = othP = othK = placementBonus = 0;
   }
 };
 
@@ -116,38 +114,30 @@ public:
       const
     {
       uint8_t at_i   = 0;
-      uint8_t at_i_4 = 0;
-      uint8_t at_i_5 = 0;
 
       for( int i = 0 ; i < cSquares ; i++ )
       {
         at_i   = At( i );
-        at_i_4 = At( i + 4 );
-        at_i_5 = ( i % 4 == 0 ? At( i + 5 ) : CELL_INVALID );
 
         if( at_i  & CELL_OWN )
         {
-          if( at_i & at_i_4 & at_i_5 )
-            info.ownT++;
-          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
-            info.ownD++;
-
           if( at_i & CELL_KING )
-            info.ownK += squareKingCoeff[ i ];
+          {
+            info.ownK++;
+            info.placementBonus += 7 - CellToRow( i );
+          }
           else
-            info.ownP += squareManCoeff[ i ];
+          {
+            info.ownP++;
+            info.placementBonus += CellToRow( i );
+          }
         }
         else if ( at_i & CELL_OTHER )
         {
-          if( at_i & at_i_4 & at_i_5 )
-            info.othT++;
-          else if( ( at_i & at_i_4 ) || ( at_i & at_i_5 ) )
-            info.othD++;
-
           if( at_i & CELL_KING )
-            info.othK += squareKingCoeff[ i ];
+            info.othK++;
           else
-            info.othP += squareManCoeff[ i ];
+            info.othP++;
         }
       }
     }
