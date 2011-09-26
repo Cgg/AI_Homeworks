@@ -7,4 +7,4 @@ if [ ! -f client ]
   make all
 fi
 
-echo `./client 130.237.218.85 12321 STANDALONE practice`
+echo -e "`./client 130.237.218.85 12321 STANDALONE practice`"

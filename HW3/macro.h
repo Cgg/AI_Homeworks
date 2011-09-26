@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 

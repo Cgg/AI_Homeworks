@@ -4,6 +4,8 @@
 
 #include "macro.h"
 
+#define DEBUG
+
 namespace ducks
 {
 
@@ -34,17 +36,27 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
 
   int duckSeqLenght;
 
-  LOG( L_GUESS, "Here we are" );
+#ifdef DEBUG
+  std::cout << "Entering Guess" << std::endl;
+#endif
 
   for(int i=0;i<pDucks.size();i++)
   {
+#ifdef DEBUG
+    std::cout << "Guess Duck " << i << std::endl;
+#endif
+
     if(pDucks[i].IsAlive())
     {
+#ifdef DEBUG
+      std::cout << "\tDuck is alive" << std::endl;
+#endif
+
        duckSeqLenght = pDucks[ i ].GetSeqLength();
 
        for( int sIdx = 0 ; sIdx < duckSeqLenght ; sIdx++ )
        {
-         pDucks[ i ].GetAction( i ).Print();
+         pDucks[ i ].GetAction( sIdx ).Print();
        }
     }
   }
