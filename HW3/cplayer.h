@@ -17,6 +17,10 @@ namespace ducks
     B_N_BEHAVIORS   // numering element
   };
 
+uint8_t HashEvidence( CAction const & action );
+
+CAction UnhashEvidence( uint8_t hash, int birdNumber );
+
 class CPlayer
 {
   public:

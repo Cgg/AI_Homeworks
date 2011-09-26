@@ -9,6 +9,26 @@
 namespace ducks
 {
 
+uint8_t HashEvidence( CAction const & action )
+{
+  uint8_t result = 0;
+
+  result = action.GetHAction() +
+           ( action.GetVAction() << 2 ) +
+           ( action.GetMovement() << 4 );
+
+  return result;
+}
+
+CAction UnhashEvidence( uint8_t hash, int birdNumber )
+{
+  EAction   actionH = ( EAction )( hash & 0x03 );
+  EAction   actionV = ( EAction )( ( hash & 0x0C ) >> 2 );
+  EMovement move    = ( EMovement )( ( hash & 0xF0 ) >> 4) ;
+
+  return CAction( birdNumber, actionH, actionV, move );
+}
+
 CPlayer::CPlayer()
 {
 }
@@ -34,7 +54,9 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
   * This skeleton guesses that all of them are white... they were the most likely after all!
   */
 
-  int duckSeqLenght;
+  int     duckSeqLenght;
+  int     duckNumber;
+  uint8_t hash;
 
 #ifdef DEBUG
   std::cout << "Entering Guess" << std::endl;
@@ -54,9 +76,18 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
 
        duckSeqLenght = pDucks[ i ].GetSeqLength();
 
+       duckNumber = pDucks[ i ].GetAction( 0 ).GetBirdNumber();
+
        for( int sIdx = 0 ; sIdx < duckSeqLenght ; sIdx++ )
        {
          pDucks[ i ].GetAction( sIdx ).Print();
+
+         hash = HashEvidence( pDucks[ i ].GetAction( sIdx ) );
+
+         if( UnhashEvidence( hash, duckNumber ) == pDucks[ i ].GetAction( sIdx ) )
+           std::cout << "Successfull hashing/unhashing" << std::endl;
+         else
+           std::cout << "FAIL at hashing/unhashing" << std::endl;
        }
     }
   }
