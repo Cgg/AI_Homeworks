@@ -4,6 +4,7 @@
 #include "ctime.h"
 #include "cstate.h"
 #include <vector>
+#include <map>
 
 namespace ducks
 {
@@ -17,14 +18,48 @@ enum EBehavior
   B_N_BEHAVIORS   // numering element
 };
 
-double TransitionMatrix[ B_N_BEHAVIORS * B_N_BEHAVIORS ];
-double EvidenceMatrix[ B_N_BEHAVIORS * N_EVIDENCES ];
+void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol );
 
-double PI[ B_N_BEHAVIORS * B_N_BEHAVIORS ];
+struct HMM
+{
+  int N_OBS;
 
-uint8_t HashEvidence( CAction const & action );
+  // All matrixes are row-wise stored, so to access element i,j of matrix A
+  // the thing to do is A[ j + i*nCol ]
 
-CAction UnhashEvidence( uint8_t hash, int birdNumber );
+  // Initial states probabilities, is 1 x B_N_BEHAVIORS
+  std::vector< double > PI;
+
+  // is B_N_BEHAVIORS x B_N_BEHAVIORS
+  std::vector< double > TransitionMatrix;
+  // is B_N_BEHAVIORS x N_OBS
+  std::vector< double > EvidenceMatrix;
+
+  // each column is an alpha vector for a given t, from 0 to T-1
+  std::vector< std::vector< double > > alphas;
+  // each column is a beta vector for a given t, from 0 to T-1
+  std::vector< std::vector< double > > betas;
+  // each column is a gamma vector for a given t, from 0 to T-1
+  std::vector< std::vector< double > > gammas;
+
+
+  std::map< uint8_t, int > evidencesHashes;
+
+  // traduction between an action and its hash
+  static uint8_t HashEvidence( CAction const & action );
+  static uint8_t HashEvidence( EAction actionH, EAction actionV, EMovement move );
+  static CAction UnhashEvidence( uint8_t hash, int birdNumber );
+
+  void InitTheMatrix();
+  void PopulateEvidenceMatrix();
+
+  // WARNING the observations here are already hashed
+  std::vector< double > Forward( int t, std::vector< uint8_t > const & observations );
+  // where lastT represent T, current time at which the calculation is done
+  std::vector< double > Backward( int t, int lastT, std::vector< uint8_t > const & observations );
+
+  HMM(){ InitTheMatrix(); }
+};
 
 class CPlayer
 {
