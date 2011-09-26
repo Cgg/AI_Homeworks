@@ -10,6 +10,28 @@
 namespace chk
 {
 
+double CBoard::squareManCoeff[32] = {
+      1, 1, 1, 1,
+      1, 1, 1, 1.2,
+      1, 1, 1, 1.2,
+      1.2, 1.5, 1.5, 1.5,
+      1.2, 1.5, 1.5, 1.5,
+      1, 1, 1, 1.2,
+      1, 1, 1, 2,
+      1.5, 2, 2, 2.2
+    };
+
+double CBoard::squareKingCoeff[32] = {
+      2, 2, 2, 2,
+      2, 1, 1, 1,
+      1, 1, 1, 1,
+      1, 1.5, 1.5, 1,
+      1, 1.5, 1.5, 1,
+      1, 1, 1, 1,
+      1, 1, 1, 1,
+      -1, 0, 0, 0
+    };
+
 double Node::AlphaBeta
 (
   bool   isMaxNode,
@@ -138,9 +160,10 @@ double Node::computeHeuristic
   */
 #endif
 
-  return ( OWN_P_VAL * info.ownP + OTH_P_VAL * info.othP +
-           OWN_K_VAL * info.ownK + OTH_K_VAL * info.othK +
-           info.placementBonus );
+  return ( OWN_D_VAL * info.ownD + OWN_T_VAL * info.ownT +
+           OTH_D_VAL * info.othD + OTH_T_VAL * info.othT +
+           OWN_P_VAL * info.ownP + OTH_P_VAL * info.othP +
+           OWN_K_VAL * info.ownK + OTH_K_VAL * info.othK );
 }
 
 std::vector< Node > * Node::expand
