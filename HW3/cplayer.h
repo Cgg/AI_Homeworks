@@ -17,6 +17,11 @@ enum EBehavior
   B_N_BEHAVIORS   // numering element
 };
 
+double TransitionMatrix[ B_N_BEHAVIORS * B_N_BEHAVIORS ];
+double EvidenceMatrix[ B_N_BEHAVIORS * N_EVIDENCES ];
+
+double PI[ B_N_BEHAVIORS * B_N_BEHAVIORS ];
+
 uint8_t HashEvidence( CAction const & action );
 
 CAction UnhashEvidence( uint8_t hash, int birdNumber );

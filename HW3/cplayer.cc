@@ -31,6 +31,11 @@ CAction UnhashEvidence( uint8_t hash, int birdNumber )
 
 CPlayer::CPlayer()
 {
+  // For now let's assume that each behavior has the same probability to
+  // happen
+  // This probabilities should be adjusted later.
+  for( int i = 0 ; i < B_N_BEHAVIORS * B_N_BEHAVIORS ; i++ )
+    TransitionMatrix[ i ] = 1 / B_N_BEHAVIORS;
 }
 
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
