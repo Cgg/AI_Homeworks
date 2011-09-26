@@ -2,6 +2,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "macro.h"
+
 namespace ducks
 {
 
@@ -30,10 +32,21 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
   * This skeleton guesses that all of them are white... they were the most likely after all!
   */
 
+  int duckSeqLenght;
+
+  LOG( L_GUESS, "Here we are" );
+
   for(int i=0;i<pDucks.size();i++)
   {
     if(pDucks[i].IsAlive())
-      pDucks[i].SetSpecies(SPECIES_WHITE);
+    {
+       duckSeqLenght = pDucks[ i ].GetSeqLength();
+
+       for( int sIdx = 0 ; sIdx < duckSeqLenght ; sIdx++ )
+       {
+         pDucks[ i ].GetAction( i ).Print();
+       }
+    }
   }
 }
 
