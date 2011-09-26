@@ -18,7 +18,8 @@ namespace ducks
 
 class CPlayer
 {
-public:
+  public:
+
     ///constructor
 
     ///There is no data in the beginning, so not much should be done here.
