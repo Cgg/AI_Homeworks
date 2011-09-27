@@ -224,7 +224,7 @@ void HMM::Learn( CDuck const & duck )
 
     oldLikelyhood = newLikelyhood;
 
-    double newLikelyhood = ComputeNewLikelyhood( scalFactors );
+    newLikelyhood = ComputeNewLikelyhood( scalFactors );
 
 #ifdef DEBUG
     std::cout << "Scaling factors from 0 to T-1" << std::endl;
