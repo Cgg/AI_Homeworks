@@ -238,7 +238,7 @@ void HMM::InitTheMatrixes()
 
     for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
     {
-      TransitionMatrix[ i + ( j * B_N_BEHAVIORS ) ] = initTr[ j ];
+      TransitionMatrix[ j + ( i * B_N_BEHAVIORS ) ] = initTr[ j ];
     }
   }
 
@@ -252,11 +252,14 @@ void HMM::InitTheMatrixes()
   // what learning is for)
   std::vector< double > initObs;
 
-  for( int i = 0 ; i < B_N_BEHAVIORS * N_OBS ; i++ )
+  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
-    initObs = GenerateUniformNoisyProba( N_OBS );
+    for( int j = 0 ; j < N_OBS ; j++ )
+    {
+      initObs = GenerateUniformNoisyProba( N_OBS );
 
-    EvidenceMatrix[ i ] = initObs[ i ];
+      EvidenceMatrix[ j + ( N_OBS * i ) ] = initObs[ j ];
+    }
   }
 
 #ifdef DEBUG
