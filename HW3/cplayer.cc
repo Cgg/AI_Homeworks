@@ -37,12 +37,13 @@ std::vector< double > GenerateUniformNoisyProba( int nProba )
   double base = 1 / ( double )nProba;
 
   int epsilon = floor( ( base / 10.0 ) * 10000 );
+  int halfEps = epsilon / 2;
 
   double sum = 1.0;
 
   for( int i = 0 ; i < nProba - 1 ; i++ )
   {
-    curProb = base + ( ( rand() % epsilon ) / 10000.0 );
+    curProb = base + ( ( rand() % epsilon  - halfEps ) / 10000.0 );
 
     if( sum - curProb >= 0 )
     {
