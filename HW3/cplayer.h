@@ -69,6 +69,8 @@ class  HMM
     // WARNING the observations here are already hashed
     std::vector< double > Forward
     (
+      std::vector< std::vector< double > > & alphas,
+      std::vector< double >                & scalFactors,
       int t,
       std::vector< uint8_t > const & observations
     );
@@ -76,6 +78,8 @@ class  HMM
     // where lastT represent T, current time at which the calculation is done
     std::vector< double > Backward
     (
+      std::vector< std::vector< double > > & betas,
+      std::vector< double > const & scalFactors,
       int t,
       int lastT,
       std::vector< uint8_t > const & observations
@@ -85,6 +89,8 @@ class  HMM
     (
       std::vector< std::vector< double > >       & diGammas,
       std::vector< std::vector< double > >       & gammas,
+      std::vector< std::vector< double > > const & alphas,
+      std::vector< std::vector< double > > const & betas,
       std::vector< uint8_t >               const & observations
     ) const;
 
@@ -107,12 +113,6 @@ class  HMM
     // is B_N_BEHAVIORS x N_OBS
     std::vector< double > EvidenceMatrix;
 
-    // scaling factors
-    std::vector< double > scalFactors;
-    // each column is an alpha vector for a given t, from 0 to T-1
-    std::vector< std::vector< double > > alphas;
-    // each column is a beta vector for a given t, from 0 to T-1
-    std::vector< std::vector< double > > betas;
 };
 
 class CPlayer

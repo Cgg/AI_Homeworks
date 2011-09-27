@@ -189,6 +189,18 @@ void HMM::Learn( CDuck const & duck )
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
   int evidenceIdx;
 
+  // hashes for the given sequence of evidences
+  std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
+
+  // scaling factors
+  std::vector< double > scalFactors;
+
+  // each column is an xxx vector for a given t, from 0 to T-1
+  std::vector< std::vector< double > > alphas;
+  std::vector< std::vector< double > > betas;
+  std::vector< std::vector< double > > diGammas;
+  std::vector< std::vector< double > > gammas;
+
   // initialize scaling factors
   scalFactors.reserve( duckSeqLength );
   for( int i = 0 ; i < duckSeqLength ; i++ )
@@ -202,20 +214,15 @@ void HMM::Learn( CDuck const & duck )
     betas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
 
   // get all hashes for the observations sequence
-  std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
-
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
 
   // the actual forward/backward pass
-  Forward( duckSeqLength-1, hashedEvidences );
-  Backward( 0, duckSeqLength-1, hashedEvidences );
+  Forward( alphas, scalFactors, duckSeqLength-1, hashedEvidences );
+  Backward( betas, scalFactors, 0, duckSeqLength-1, hashedEvidences );
 
   // compute the di-gammas and gammas
-  std::vector< std::vector < double > > diGammas;
-  std::vector< std::vector < double > > gammas;
-
-  ComputeGammas( diGammas, gammas, hashedEvidences );
+  ComputeGammas( diGammas, gammas, alphas, betas, hashedEvidences );
 
   // update the model given all that shit
   UpdateModel( diGammas, gammas, hashedEvidences );
@@ -326,6 +333,8 @@ void HMM::InitTheMatrixes()
 
 std::vector< double >  HMM::Forward
 (
+  std::vector< std::vector< double > > & alphas,
+  std::vector< double >                & scalFactors,
   int t,
   std::vector< uint8_t > const & observations
 )
@@ -357,7 +366,8 @@ std::vector< double >  HMM::Forward
   else
   {
     // my, that's a yummy recursion !
-    std::vector< double > alphaPrev = Forward( t - 1, observations );
+    std::vector< double > alphaPrev = Forward( alphas, scalFactors,
+                                         t - 1, observations );
 
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
@@ -395,6 +405,8 @@ std::vector< double >  HMM::Forward
 
 std::vector< double > HMM::Backward
 (
+  std::vector< std::vector< double > > & betas,
+  std::vector< double > const & scalFactors,
   int t,
   int lastT,
   std::vector< uint8_t > const & observations
@@ -423,7 +435,8 @@ std::vector< double > HMM::Backward
   else
   {
     // recursion... me liek it
-    std::vector< double > betaNext = Backward( t+1, lastT, observations );
+    std::vector< double > betaNext = Backward( betas, scalFactors, t+1, 
+                                        lastT, observations );
 
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
@@ -456,6 +469,8 @@ void HMM::ComputeGammas
 (
   std::vector< std::vector< double > >       & diGammas,
   std::vector< std::vector< double > >       & gammas,
+  std::vector< std::vector< double > > const & alphas,
+  std::vector< std::vector< double > > const & betas,
   std::vector< uint8_t >               const & observations
 )
   const
@@ -568,11 +583,15 @@ void HMM::UpdateModel
   }
 }
 
-double HMM::ComputeNewLikelyhood( std::vector< double > const & scalFactor ) const
+double HMM::ComputeNewLikelyhood
+(
+  std::vector< double > const & scalFactors
+)
+  const
 {
   double logProb = 0;
 
-  for( int t = 0 ; t < scalFactor.size() ; t++ )
+  for( int t = 0 ; t < scalFactors.size() ; t++ )
   {
     logProb += log( scalFactors[ t ] );
   }
