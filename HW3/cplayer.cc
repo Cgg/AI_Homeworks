@@ -257,6 +257,15 @@ void HMM::Learn( CDuck const & duck )
   // update the model given all that shit
   UpdateModel( diGammas, gammas, hashedEvidences );
 
+  // and now compute the log stuff
+  double logProb = 0;
+
+  for( int t = 0 ; t < duckSeqLength ; t++ )
+  {
+    logProb += log( scalFactors[ t ] );
+  }
+  logProb = - logProb;
+
 #ifdef DEBUG
   std::cout << "Scaling factors from 0 to T-1" << std::endl;
   for( int i = 0 ; i < duckSeqLength ; i++ )
@@ -289,6 +298,8 @@ void HMM::Learn( CDuck const & duck )
   std::cout << std::endl << "New Evidences" << std::endl;
   PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
   CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
+
+  std::cout << "new log probe is " << logProb << std::endl;
 #endif
   // and update PI, Transition and Evidence matrixes
 }
