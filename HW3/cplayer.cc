@@ -210,61 +210,13 @@ void HMM::Learn( CDuck const & duck )
   std::vector< std::vector < double > > diGammas;
   std::vector< std::vector < double > > gammas;
 
-  double denominator;
-  double curGammaI;
-
-  for( int t = 0 ; t < duckSeqLength - 1 ; t++ ) // carefull, there are T-1 elements in gammas and diGammas
-  {
-    evidenceIdx = evidencesHashes[ hashedEvidences[ t + 1 ] ];
-
-    diGammas.push_back( std::vector< double >( B_N_BEHAVIORS * B_N_BEHAVIORS ) );
-    gammas.push_back( std::vector< double >( B_N_BEHAVIORS ) );
-
-    denominator = 0;
-
-    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
-    {
-      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
-      {
-       denominator += alphas[ t ][ i ] *
-                       TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
-                       EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
-                       betas[ t + 1 ][ j ];
-      }
-    }
-
-    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
-    {
-      curGammaI = 0;
-
-      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
-      {
-        diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ] =
-          ( alphas[ t ][ i ] *
-            TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
-            EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
-            betas[ t + 1 ][ j ] )
-          /
-          denominator;   // ugly, ugly, uglyyyy
-
-        curGammaI += diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ];
-      }
-
-      gammas[ t ][ i ] = curGammaI;
-    }
-  }
+  ComputeGammas( diGammas, gammas, hashedEvidences );
 
   // update the model given all that shit
   UpdateModel( diGammas, gammas, hashedEvidences );
 
   // and now compute the log stuff
-  double logProb = 0;
-
-  for( int t = 0 ; t < duckSeqLength ; t++ )
-  {
-    logProb += log( scalFactors[ t ] );
-  }
-  logProb = - logProb;
+  double logProb = ComputeNewLikelyhood( scalFactors );
 
 #ifdef DEBUG
   std::cout << "Scaling factors from 0 to T-1" << std::endl;
@@ -495,6 +447,62 @@ std::vector< double > HMM::Backward
   return betaT;
 }
 
+void HMM::ComputeGammas
+(
+  std::vector< std::vector< double > >       & diGammas,
+  std::vector< std::vector< double > >       & gammas,
+  std::vector< uint8_t >               const & observations
+)
+  const
+{
+  double denominator;
+  double curGammaI;
+  int    evidenceIdx;
+
+  int duckSeqLength = observations.size();
+
+  for( int t = 0 ; t < duckSeqLength - 1 ; t++ ) // carefull, there are T-1 elements in gammas and diGammas
+  {
+    evidenceIdx = evidencesHashes[ observations[ t + 1 ] ];
+
+    diGammas.push_back( std::vector< double >( B_N_BEHAVIORS * B_N_BEHAVIORS ) );
+    gammas.push_back( std::vector< double >( B_N_BEHAVIORS ) );
+
+    denominator = 0;
+
+    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    {
+      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
+      {
+       denominator += alphas[ t ][ i ] *
+                       TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
+                       EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
+                       betas[ t + 1 ][ j ];
+      }
+    }
+
+    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    {
+      curGammaI = 0;
+
+      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
+      {
+        diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ] =
+          ( alphas[ t ][ i ] *
+            TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
+            EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
+            betas[ t + 1 ][ j ] )
+          /
+          denominator;   // ugly, ugly, uglyyyy
+
+        curGammaI += diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ];
+      }
+
+      gammas[ t ][ i ] = curGammaI;
+    }
+  }
+}
+
 void HMM::UpdateModel
 (
   std::vector< std::vector< double > >  const & diGammas,
@@ -553,6 +561,18 @@ void HMM::UpdateModel
       EvidenceMatrix[ j + ( N_OBS * i ) ] = numerator / denominator;
     }
   }
+}
+
+double HMM::ComputeNewLikelyhood( std::vector< double > const & scalFactor ) const
+{
+  double logProb = 0;
+
+  for( int t = 0 ; t < scalFactor.size() ; t++ )
+  {
+    logProb += log( scalFactors[ t ] );
+  }
+
+  return -logProb;
 }
 
 

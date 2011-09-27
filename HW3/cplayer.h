@@ -81,12 +81,21 @@ class  HMM
       std::vector< uint8_t > const & observations
     );
 
+    void ComputeGammas
+    (
+      std::vector< std::vector< double > >       & diGammas,
+      std::vector< std::vector< double > >       & gammas,
+      std::vector< uint8_t >               const & observations
+    ) const;
+
     void UpdateModel
     (
-      std::vector< std::vector< double > >  const & diGammas,
-      std::vector< std::vector< double > >  const & gammas,
-      std::vector< uint8_t >                const & observations
+      std::vector< std::vector< double > > const & diGammas,
+      std::vector< std::vector< double > > const & gammas,
+      std::vector< uint8_t >               const & observations
     );
+
+    double ComputeNewLikelyhood( std::vector< double > const & scalFactor ) const;
 
   // protected data, HMM core
   protected:
