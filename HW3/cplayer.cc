@@ -6,7 +6,8 @@
 #include <ctime>
 #include <cmath>
 
-//#define DEBUG
+#define DEBUG
+//#define DEBUG_EXT
 //#define DEBUG_RAND
 //#define DEBUG_FW
 //#define DEBUG_BW
@@ -226,7 +227,7 @@ void HMM::Learn( CDuck const & duck )
 
     newLikelyhood = ComputeNewLikelyhood( scalFactors );
 
-#ifdef DEBUG
+#ifdef DEBUG_EXT
     std::cout << "Scaling factors from 0 to T-1" << std::endl;
     for( int i = 0 ; i < duckSeqLength ; i++ )
       std::cout << scalFactors[ i ] << std::endl;
@@ -247,6 +248,8 @@ void HMM::Learn( CDuck const & duck )
 
       std::cout << std::endl;
     }
+#endif
+#ifdef DEBUG
     std::cout << "New PI" << std::endl;
     PrintMatrix( PI, 1, B_N_BEHAVIORS );
     CheckSum( PI, 1, B_N_BEHAVIORS );
@@ -262,7 +265,6 @@ void HMM::Learn( CDuck const & duck )
 
     std::cout << "Old LH is "  << oldLikelyhood
               << " new LH is " << newLikelyhood << std::endl;
-    std::cout << (newLikelyhood > oldLikelyhood) << std::endl;
 
   } while( newLikelyhood > oldLikelyhood );
 }
