@@ -239,7 +239,7 @@ void HMM::Learn( CDuck const & duck )
 
       for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
       {
-        diGammas[ t ][ j + ( B_N_BEHAVIORS * j ) ] =
+        diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ] =
           ( alphas[ t ][ i ] *
             TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
             EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
