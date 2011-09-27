@@ -19,6 +19,7 @@ enum EBehavior
 };
 
 void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol );
+std::vector< double > GenerateUniformNoisyProba( int nProba );
 
 class  HMM
 {

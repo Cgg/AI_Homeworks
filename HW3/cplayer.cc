@@ -2,10 +2,14 @@
 #include <cstdlib>
 #include <iostream>
 #include <cassert>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
 
 #include "macro.h"
 
 #define DEBUG
+//#define DEBUG_RAND
 //#define DEBUG_FW
 //#define DEBUG_BW
 
@@ -22,6 +26,48 @@ void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol )
 
     std::cout << std::endl;
   }
+}
+
+std::vector< double > GenerateUniformNoisyProba( int nProba )
+{
+  std::vector< double > probas;
+
+  double curProb;
+
+  double base = 1 / ( double )nProba;
+
+  int epsilon = floor( ( base / 10.0 ) * 10000 );
+
+  double sum = 1.0;
+
+  for( int i = 0 ; i < nProba - 1 ; i++ )
+  {
+    curProb = base + ( ( rand() % epsilon ) / 10000.0 );
+
+    if( sum - curProb >= 0 )
+    {
+      probas.push_back( curProb );
+      sum -= curProb;
+    }
+    else if( sum > 0 )
+    {
+      probas.push_back( sum );
+      sum = 0;
+    }
+  }
+
+  probas.push_back( sum );
+  sum = 0;
+
+#ifdef DEBUG_RAND
+  std::cout << "Vector of probabilities : " << std::endl;
+  for( int i = 0 ; i < nProba ; i++ )
+    std::cout << probas[ i ] << std::endl;
+
+  std::cout << "Left-over : " << sum << std::endl;
+#endif
+
+  return probas;
 }
 
 // class HMM implementation
@@ -180,15 +226,18 @@ void HMM::InitTheMatrixes()
 
   TransitionMatrix.reserve( B_N_BEHAVIORS * B_N_BEHAVIORS );
 
-  double pi_init = 1 / ( double )B_N_BEHAVIORS;
+  std::vector< double > initPi = GenerateUniformNoisyProba( B_N_BEHAVIORS );
+  std::vector< double > initTr;
 
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
-    PI[ i ] = pi_init;
+    PI[ i ] = initPi[ i ];
+
+    initTr = GenerateUniformNoisyProba( B_N_BEHAVIORS );
 
     for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
     {
-      TransitionMatrix[ i + ( j * B_N_BEHAVIORS ) ] = pi_init;
+      TransitionMatrix[ i + ( j * B_N_BEHAVIORS ) ] = initTr[ j ];
     }
   }
 
@@ -200,10 +249,14 @@ void HMM::InitTheMatrixes()
   // at the beginning we assume for every state that we could equally
   // observe every evidence in it. (Of course this is not true but that's
   // what learning is for)
-  double obs_init = 1 / (double)N_OBS;
+  std::vector< double > initObs;
 
   for( int i = 0 ; i < B_N_BEHAVIORS * N_OBS ; i++ )
-    EvidenceMatrix[ i ] = obs_init;
+  {
+    initObs = GenerateUniformNoisyProba( N_OBS );
+
+    EvidenceMatrix[ i ] = initObs[ i ];
+  }
 
 #ifdef DEBUG
   std::cout << "PI" << std::endl;
@@ -345,6 +398,10 @@ std::vector< double > HMM::Backward
 
 CPlayer::CPlayer()
 {
+  srand( time( NULL ) );
+
+  GenerateUniformNoisyProba( 4 );
+
   HMM::PopulateEvidencesHashes();
 }
 
