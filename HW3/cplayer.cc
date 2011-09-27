@@ -6,9 +6,7 @@
 #include <ctime>
 #include <cmath>
 
-#include "macro.h"
-
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_RAND
 //#define DEBUG_FW
 //#define DEBUG_BW
@@ -185,6 +183,9 @@ void HMM::Learn( CDuck const & duck )
   std::cout << "HMM::Learn" << std::endl;
 #endif
 
+  double oldLikelyhood = -1e10; // something very negative;
+  double newLikelyhood = oldLikelyhood;
+
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
   int evidenceIdx;
@@ -212,50 +213,58 @@ void HMM::Learn( CDuck const & duck )
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
 
-  Forward( alphas, scalFactors, duckSeqLength-1, hashedEvidences );
-  Backward( betas, scalFactors, 0, duckSeqLength-1, hashedEvidences );
+  do
+  {
+    Forward( alphas, scalFactors, duckSeqLength-1, hashedEvidences );
+    Backward( betas, scalFactors, 0, duckSeqLength-1, hashedEvidences );
 
-  ComputeGammas( diGammas, gammas, alphas, betas, hashedEvidences );
+    ComputeGammas( diGammas, gammas, alphas, betas, hashedEvidences );
 
-  UpdateModel( diGammas, gammas, hashedEvidences );
+    UpdateModel( diGammas, gammas, hashedEvidences );
 
-  double logProb = ComputeNewLikelyhood( scalFactors );
+    oldLikelyhood = newLikelyhood;
+
+    double newLikelyhood = ComputeNewLikelyhood( scalFactors );
 
 #ifdef DEBUG
-  std::cout << "Scaling factors from 0 to T-1" << std::endl;
-  for( int i = 0 ; i < duckSeqLength ; i++ )
-    std::cout << scalFactors[ i ] << std::endl;
+    std::cout << "Scaling factors from 0 to T-1" << std::endl;
+    for( int i = 0 ; i < duckSeqLength ; i++ )
+      std::cout << scalFactors[ i ] << std::endl;
 
-  std::cout << "Alphas from 0 to T-1 : " << std::endl;
-  for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
-  {
-    for( int ai = 0 ; ai < B_N_BEHAVIORS ; ai++ )
-      std::cout << alphas[ iSeq ][ ai ] << '\t';
+    std::cout << "Alphas from 0 to T-1 : " << std::endl;
+    for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
+    {
+      for( int ai = 0 ; ai < B_N_BEHAVIORS ; ai++ )
+        std::cout << alphas[ iSeq ][ ai ] << '\t';
 
-    std::cout << std::endl;
-  }
-  std::cout << "Betas from 0 to T-1 : " << std::endl;
-  for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
-  {
-    for( int bi = 0 ; bi < B_N_BEHAVIORS ; bi++ )
-      std::cout << betas[ iSeq ][ bi ] << '\t';
+      std::cout << std::endl;
+    }
+    std::cout << "Betas from 0 to T-1 : " << std::endl;
+    for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
+    {
+      for( int bi = 0 ; bi < B_N_BEHAVIORS ; bi++ )
+        std::cout << betas[ iSeq ][ bi ] << '\t';
 
-    std::cout << std::endl;
-  }
-  std::cout << "New PI" << std::endl;
-  PrintMatrix( PI, 1, B_N_BEHAVIORS );
-  CheckSum( PI, 1, B_N_BEHAVIORS );
+      std::cout << std::endl;
+    }
+    std::cout << "New PI" << std::endl;
+    PrintMatrix( PI, 1, B_N_BEHAVIORS );
+    CheckSum( PI, 1, B_N_BEHAVIORS );
 
-  std::cout << std::endl << "New Transitions" << std::endl;
-  PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
-  CheckSum( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
+    std::cout << std::endl << "New Transitions" << std::endl;
+    PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
+    CheckSum( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
 
-  std::cout << std::endl << "New Evidences" << std::endl;
-  PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
-  CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
-
-  std::cout << "new log probe is " << logProb << std::endl;
+    std::cout << std::endl << "New Evidences" << std::endl;
+    PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
+    CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 #endif
+
+    std::cout << "Old LH is "  << oldLikelyhood
+              << " new LH is " << newLikelyhood << std::endl;
+    std::cout << (newLikelyhood > oldLikelyhood) << std::endl;
+
+  } while( newLikelyhood > oldLikelyhood );
 }
 
 CAction HMM::Predict( CDuck const & duck ) const

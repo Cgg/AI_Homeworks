@@ -1,5 +1,4 @@
 #include "cclient.h"
-#include "macro.h"
 
 #include <sstream>
 #include <iostream>
