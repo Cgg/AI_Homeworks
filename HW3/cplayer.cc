@@ -217,17 +217,13 @@ void HMM::Learn( CDuck const & duck )
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
 
-  // the actual forward/backward pass
   Forward( alphas, scalFactors, duckSeqLength-1, hashedEvidences );
   Backward( betas, scalFactors, 0, duckSeqLength-1, hashedEvidences );
 
-  // compute the di-gammas and gammas
   ComputeGammas( diGammas, gammas, alphas, betas, hashedEvidences );
 
-  // update the model given all that shit
   UpdateModel( diGammas, gammas, hashedEvidences );
 
-  // and now compute the log stuff
   double logProb = ComputeNewLikelyhood( scalFactors );
 
 #ifdef DEBUG
