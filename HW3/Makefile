@@ -1,2 +1,2 @@
 all:
-	g++ -o client *.cc
+	g++ -o -g client *.cc
