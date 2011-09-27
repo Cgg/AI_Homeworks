@@ -18,8 +18,9 @@ enum EBehavior
   B_N_BEHAVIORS   // numering element
 };
 
-void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol );
+void PrintMatrix( std::vector< double > const & theMatrix, int nRow, int nCol );
 std::vector< double > GenerateUniformNoisyProba( int nProba );
+void CheckSum( std::vector< double > const & probaMatrix, int nRow, int nCol );
 
 class  HMM
 {
@@ -80,6 +81,13 @@ class  HMM
       std::vector< uint8_t > const & observations
     );
 
+    void UpdateModel
+    (
+      std::vector< std::vector< double > >  const & diGammas,
+      std::vector< std::vector< double > >  const & gammas,
+      std::vector< uint8_t >                const & observations
+    );
+
   // protected data, HMM core
   protected:
     // Initial states probabilities, is 1 x B_N_BEHAVIORS
@@ -96,10 +104,6 @@ class  HMM
     std::vector< std::vector< double > > alphas;
     // each column is a beta vector for a given t, from 0 to T-1
     std::vector< std::vector< double > > betas;
-    // each column is a gamma vector for a given t, from 0 to T-1
-    std::vector< std::vector< double > > gammas;
-
-
 };
 
 class CPlayer

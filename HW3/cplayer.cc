@@ -28,6 +28,23 @@ void PrintMatrix( std::vector< double > const & theMatrix, int nRow, int nCol )
   }
 }
 
+void CheckSum( std::vector< double > const &probaMatrix, int nRow, int nCol )
+{
+  double rowSum;
+
+  for( int i = 0 ; i < nRow ; i++ )
+  {
+    rowSum = 0;
+
+    for( int j = 0 ; j < nCol ; j++ )
+    {
+      rowSum += probaMatrix[ j + ( nCol * i ) ];
+    }
+
+    std::cout << "sum of row " << i << " is " << rowSum << std::endl;
+  }
+}
+
 std::vector< double > GenerateUniformNoisyProba( int nProba )
 {
   std::vector< double > probas;
@@ -165,6 +182,7 @@ void HMM::Learn( CDuck const & duck )
 
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
+  int evidenceIdx;
 
   // initialize scaling factors
   scalFactors.reserve( duckSeqLength );
@@ -178,13 +196,66 @@ void HMM::Learn( CDuck const & duck )
   for( int i = 0 ; i < duckSeqLength ; i++ )
     betas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
 
+  // get all hashes for the observations sequence
   std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
 
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
 
+  // the actual forward/backward pass
   Forward( duckSeqLength-1, hashedEvidences );
   Backward( 0, duckSeqLength-1, hashedEvidences );
+
+  // compute the di-gammas and gammas
+  std::vector< std::vector < double > > diGammas;
+  std::vector< std::vector < double > > gammas;
+
+  double denominator;
+  double curGammaI;
+
+  for( int t = 0 ; t < duckSeqLength - 1 ; t++ ) // carefull, there are T-1 elements in gammas and diGammas
+  {
+    evidenceIdx = evidencesHashes[ hashedEvidences[ t + 1 ] ];
+
+    diGammas.push_back( std::vector< double >( B_N_BEHAVIORS * B_N_BEHAVIORS ) );
+    gammas.push_back( std::vector< double >( B_N_BEHAVIORS ) );
+
+    denominator = 0;
+
+    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    {
+      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
+      {
+       denominator += alphas[ t ][ i ] *
+                       TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
+                       EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
+                       betas[ t + 1 ][ j ];
+      }
+    }
+
+    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    {
+      curGammaI = 0;
+
+      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
+      {
+        diGammas[ t ][ j + ( B_N_BEHAVIORS * j ) ] =
+          ( alphas[ t ][ i ] *
+            TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
+            EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
+            betas[ t + 1 ][ j ] )
+          /
+          denominator;   // ugly, ugly, uglyyyy
+
+        curGammaI += diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ];
+      }
+
+      gammas[ t ][ i ] = curGammaI;
+    }
+  }
+
+  // update the model given all that shit
+  UpdateModel( diGammas, gammas, hashedEvidences );
 
 #ifdef DEBUG
   std::cout << "Scaling factors from 0 to T-1" << std::endl;
@@ -207,8 +278,18 @@ void HMM::Learn( CDuck const & duck )
 
     std::cout << std::endl;
   }
+  std::cout << "New PI" << std::endl;
+  PrintMatrix( PI, 1, B_N_BEHAVIORS );
+  CheckSum( PI, 1, B_N_BEHAVIORS );
+
+  std::cout << std::endl << "New Transitions" << std::endl;
+  PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
+  CheckSum( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
+
+  std::cout << std::endl << "New Evidences" << std::endl;
+  PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
+  CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 #endif
-  // now compute gammas and di-gammas
   // and update PI, Transition and Evidence matrixes
 }
 
@@ -265,10 +346,13 @@ void HMM::InitTheMatrixes()
 #ifdef DEBUG
   std::cout << "PI" << std::endl;
   PrintMatrix( PI, 1, B_N_BEHAVIORS );
+  CheckSum( PI, 1, B_N_BEHAVIORS );
   std::cout << std::endl << "Transitions" << std::endl;
   PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
+  CheckSum( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
   std::cout << std::endl << "Evidences" << std::endl;
   PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
+  CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 #endif
 }
 
@@ -399,6 +483,69 @@ std::vector< double > HMM::Backward
 
   return betaT;
 }
+
+void HMM::UpdateModel
+(
+  std::vector< std::vector< double > >  const & diGammas,
+  std::vector< std::vector< double > >  const & gammas,
+  std::vector< uint8_t  >               const & observations
+)
+{
+#ifdef DEBUG
+  std::cout << "HMM::UpdateModel()" << std::endl;
+#endif
+
+  // update PI
+  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    PI[ i ] = gammas[ 0 ][ i ];
+
+  // update the transition matrix
+
+  int evidenceIdx;
+
+  double numerator;
+  double denominator;
+
+  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+  {
+    for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
+    {
+      numerator = denominator = 0;
+
+      for( int t = 0 ; t < gammas.size() ; t++ )
+      {
+        numerator   += diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ];
+        denominator += gammas[ t ][ i ];
+      }
+
+      TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] = numerator / denominator;
+    }
+  }
+
+  // update the evidence matrix
+  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+  {
+    for( int j = 0 ; j < N_OBS ; j++ )
+    {
+      numerator = denominator = 0;
+
+      for( int t = 0 ; t < gammas.size() ; t++ )
+      {
+        evidenceIdx = evidencesHashes[ observations[ t ] ];
+
+        if( evidenceIdx == j )
+          numerator += gammas[ t ][ i ];
+
+        denominator += gammas[ t ][ i ];
+      }
+
+      EvidenceMatrix[ j + ( N_OBS * i ) ] = numerator / denominator;
+    }
+  }
+}
+
+
+// CPlayer implementation
 
 CPlayer::CPlayer()
 {
