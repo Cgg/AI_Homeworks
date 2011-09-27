@@ -525,9 +525,9 @@ void HMM::ComputeGammas
 
 void HMM::UpdateModel
 (
-  std::vector< std::vector< double > >  const & diGammas,
-  std::vector< std::vector< double > >  const & gammas,
-  std::vector< uint8_t  >               const & observations
+  std::vector< std::vector< double > > const & diGammas,
+  std::vector< std::vector< double > > const & gammas,
+  std::vector< uint8_t  >              const & observations
 )
 {
 #ifdef DEBUG
