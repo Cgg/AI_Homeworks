@@ -89,6 +89,8 @@ class  HMM
     // is B_N_BEHAVIORS x N_OBS
     std::vector< double > EvidenceMatrix;
 
+    // scaling factors
+    std::vector< double > scalFactors;
     // each column is an alpha vector for a given t, from 0 to T-1
     std::vector< std::vector< double > > alphas;
     // each column is a beta vector for a given t, from 0 to T-1

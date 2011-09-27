@@ -116,16 +116,18 @@ void HMM::Learn( CDuck const & duck )
   std::cout << "HMM::Learn" << std::endl;
 #endif
 
-  // do the forward/backward stuff
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
 
+  // initialize scaling factors
+  scalFactors.reserve( duckSeqLength );
+  for( int i = 0 ; i < duckSeqLength ; i++ )
+    scalFactors[ i ] = 1;
+
   // initialize alphas and betas arrays
-  // alphas.reserve( duckSeqLength );
   for( int i = 0 ; i < duckSeqLength ; i++ )
     alphas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
 
-  //betas.reserve( duckSeqLength );
   for( int i = 0 ; i < duckSeqLength ; i++ )
     betas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
 
@@ -138,6 +140,10 @@ void HMM::Learn( CDuck const & duck )
   Backward( 0, duckSeqLength-1, hashedEvidences );
 
 #ifdef DEBUG
+  std::cout << "Scaling factors from 0 to T-1" << std::endl;
+  for( int i = 0 ; i < duckSeqLength ; i++ )
+    std::cout << scalFactors[ i ] << std::endl;
+
   std::cout << "Alphas from 0 to T-1 : " << std::endl;
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
   {
@@ -219,6 +225,8 @@ std::vector< double >  HMM::Forward
   std::cout << "Entering Forward routine with t = " << t << std::endl;
 #endif
 
+  double scalingFactor = 0;
+
   std::vector< double > alphaT( B_N_BEHAVIORS, 0 );
 
   // getting the index of evidence's hash
@@ -234,6 +242,7 @@ std::vector< double >  HMM::Forward
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
       alphaT[ i ] = PI[ i ] * EvidenceMatrix[ evidenceIdx + ( i * N_OBS ) ];
+      scalingFactor += alphaT[ i ];
     }
   }
   else
@@ -247,13 +256,24 @@ std::vector< double >  HMM::Forward
         alphaT[ i ] += alphaPrev[ j ] * TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ];
 
       alphaT[ i ] *= EvidenceMatrix[ evidenceIdx + ( i * N_OBS ) ];
+
+      scalingFactor += alphaT[ i ];
     }
   }
+
+  // do the actual scaling
+  scalingFactor = 1 / scalingFactor;
+
+  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    alphaT[ i ] *= scalingFactor;
 
 #ifdef DEBUG_FW
   std::cout << "Alpha at t = " << t << std::endl;
   PrintMatrix( alphaT, 1, B_N_BEHAVIORS );
 #endif
+
+  // populate the scaling factor array
+  scalFactors[ t ] = scalingFactor;
 
   // populate the alphas matrix
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
@@ -304,6 +324,10 @@ std::vector< double > HMM::Backward
       }
     }
   }
+
+  // do the scaling
+  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    betaT[ i ] *= scalFactors[ t ];
 
 #ifdef DEBUG_BW
   std::cout << "Beta at t = " << t << std::endl;
