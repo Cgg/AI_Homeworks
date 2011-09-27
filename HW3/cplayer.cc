@@ -193,18 +193,13 @@ void HMM::Learn( CDuck const & duck )
   std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
 
   // scaling factors
-  std::vector< double > scalFactors;
+  std::vector< double > scalFactors( duckSeqLength, 1 );
 
   // each column is an xxx vector for a given t, from 0 to T-1
   std::vector< std::vector< double > > alphas;
   std::vector< std::vector< double > > betas;
   std::vector< std::vector< double > > diGammas;
   std::vector< std::vector< double > > gammas;
-
-  // initialize scaling factors
-  scalFactors.reserve( duckSeqLength );
-  for( int i = 0 ; i < duckSeqLength ; i++ )
-    scalFactors[ i ] = 1;
 
   // initialize alphas and betas arrays
   for( int i = 0 ; i < duckSeqLength ; i++ )
@@ -261,7 +256,6 @@ void HMM::Learn( CDuck const & duck )
 
   std::cout << "new log probe is " << logProb << std::endl;
 #endif
-  // and update PI, Transition and Evidence matrixes
 }
 
 CAction HMM::Predict( CDuck const & duck ) const
