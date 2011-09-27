@@ -6,6 +6,8 @@
 #include "macro.h"
 
 #define DEBUG
+//#define DEBUG_FW
+//#define DEBUG_BW
 
 namespace ducks
 {
@@ -74,8 +76,9 @@ void HMM::PopulateEvidencesHashes()
 #ifdef DEBUG
   std::cout << "Number of possible evidences : " << N_OBS << std::endl;
   std::cout << "Hashes for possible evidences : " << std::endl;
-  for( int i = 0 ; i < N_OBS ; i++ )
-    std::cout << evidencesHashes[ i ] << std::endl;
+  std::map< uint8_t, int >::const_iterator itEv;
+  for( itEv = evidencesHashes.begin() ; itEv != evidencesHashes.end() ; itEv++)
+    std::cout << (int)itEv->first << '\t' << itEv->second <<std::endl;
 #endif
 }
 
@@ -109,7 +112,51 @@ CAction HMM::UnhashEvidence( uint8_t hash, int birdNumber )
 
 void HMM::Learn( CDuck const & duck )
 {
+#ifdef DEBUG
+  std::cout << "HMM::Learn" << std::endl;
+#endif
+
   // do the forward/backward stuff
+  int duckSeqLength = duck.GetSeqLength();
+  int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
+
+  // initialize alphas and betas arrays
+  // alphas.reserve( duckSeqLength );
+  for( int i = 0 ; i < duckSeqLength ; i++ )
+    alphas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
+
+  //betas.reserve( duckSeqLength );
+  for( int i = 0 ; i < duckSeqLength ; i++ )
+    betas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
+
+  std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
+
+  for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
+    hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
+
+  Forward( duckSeqLength-1, hashedEvidences );
+  Backward( 0, duckSeqLength-1, hashedEvidences );
+
+#ifdef DEBUG
+  std::cout << "Alphas from 0 to T-1 : " << std::endl;
+  for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
+  {
+    for( int ai = 0 ; ai < B_N_BEHAVIORS ; ai++ )
+      std::cout << alphas[ iSeq ][ ai ] << '\t';
+
+    std::cout << std::endl;
+  }
+  std::cout << "Betas from 0 to T-1 : " << std::endl;
+  for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
+  {
+    for( int bi = 0 ; bi < B_N_BEHAVIORS ; bi++ )
+      std::cout << betas[ iSeq ][ bi ] << '\t';
+
+    std::cout << std::endl;
+  }
+#endif
+  // now compute gammas and di-gammas
+  // and update PI, Transition and Evidence matrixes
 }
 
 CAction HMM::Predict( CDuck const & duck ) const
@@ -168,6 +215,10 @@ std::vector< double >  HMM::Forward
   std::vector< uint8_t > const & observations
 )
 {
+#ifdef DEBUG_FW
+  std::cout << "Entering Forward routine with t = " << t << std::endl;
+#endif
+
   std::vector< double > alphaT( B_N_BEHAVIORS, 0 );
 
   // getting the index of evidence's hash
@@ -175,6 +226,10 @@ std::vector< double >  HMM::Forward
 
   if( t == 0 )
   {
+#ifdef DEBUG_FW
+    std::cout << "FW, at t = " << t << " hits end of recursion" << std::endl;
+#endif
+
     // end of recursion
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
@@ -195,9 +250,9 @@ std::vector< double >  HMM::Forward
     }
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_FW
   std::cout << "Alpha at t = " << t << std::endl;
-  PrintMatrix( alphaT, B_N_BEHAVIORS, 1 );
+  PrintMatrix( alphaT, 1, B_N_BEHAVIORS );
 #endif
 
   // populate the alphas matrix
@@ -216,13 +271,20 @@ std::vector< double > HMM::Backward
   std::vector< uint8_t > const & observations
 )
 {
+#ifdef DEBUG_BW
+  std::cout << "Entering Backward routine with t = " << t << std::endl;
+#endif
+
   std::vector< double > betaT( B_N_BEHAVIORS, 0 );
 
   // getting the index of evidence's hash
   int evidenceIdx = evidencesHashes[ observations[ t ] ];
 
-  if( t == lastT - 1 )
+  if( t == lastT )
   {
+#ifdef DEBUG_BW
+    std::cout << "BW, at t = " << t << " hits end of recursion" << std::endl;
+#endif
     // end of recursion
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
@@ -236,16 +298,16 @@ std::vector< double > HMM::Backward
 
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
-      for( int j = 0 ; i < B_N_BEHAVIORS ; j++ )
+      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
       {
         betaT[ i ] = TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] * EvidenceMatrix[ evidenceIdx + ( j * N_OBS ) ] * betaNext[ j ];
       }
     }
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_BW
   std::cout << "Beta at t = " << t << std::endl;
-  PrintMatrix( betaT, B_N_BEHAVIORS, 1 );
+  PrintMatrix( betaT, 1, B_N_BEHAVIORS );
 #endif
 
   // populate the betas matrix
@@ -283,14 +345,9 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
   * This skeleton guesses that all of them are white... they were the most likely after all!
   */
 
-  int     duckSeqLength;
-  int     duckNumber;
-
 #ifdef DEBUG
   std::cout << "Entering Guess" << std::endl;
 #endif
-
-  HMM model;
 
   for(int i=0;i<pDucks.size();i++)
   {
@@ -302,41 +359,11 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
     {
 #ifdef DEBUG
       std::cout << "\tDuck is alive" << std::endl;
+      std::cout << "\tCreating an HMM and learning duck " << i << std::endl;
 #endif
+      HMM model;
 
-      /*
-      duckSeqLength = pDucks[ i ].GetSeqLength();
-      duckNumber = pDucks[ i ].GetAction( 0 ).GetBirdNumber();
-
-      std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
-
-      for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
-        hashedEvidences[ i ] = HMM::HashEvidence( pDucks[ i ].GetAction( iSeq ) );
-
-      HMM::Forward( duckSeqLength-1, hashedEvidences );
-      HMM::Backward( 0, duckSeqLength-1, hashedEvidences );
-
-#ifdef DEBUG
-      std::cout << "Alphas : " << std::endl;
-      for( int a = 0 ; a < duckSeqLength ; a++ )
-      {
-        for( int ai = 0 ; ai < B_N_BEHAVIORS ; ai++ )
-          std::cout << HMM::alphas[ i ][ ai ] << '\t';
-
-        std::cout << std::endl;
-      }
-      std::cout << "Betas : " << std::endl;
-      for( int a = 0 ; a < duckSeqLength ; a++ )
-      {
-        for( int bi = 0 ; bi < B_N_BEHAVIORS ; bi++ )
-          std::cout << HMM::betas[ i ][ bi ] << '\t';
-
-        std::cout << std::endl;
-      }
-#endif
-      // now compute gammas and di-gammas
-      // and update PI, Transition and Evidence matrixes
-      */
+      model.Learn( pDucks[ i ] );
     }
   }
 }
