@@ -17,7 +17,7 @@ namespace ducks
 {
 
 // Local methods implementation
-void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol )
+void PrintMatrix( std::vector< double > const & theMatrix, int nRow, int nCol )
 {
   for( int i = 0 ; i < nRow ; i++ )
   {
