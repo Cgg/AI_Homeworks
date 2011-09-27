@@ -1,6 +1,7 @@
 #include "cplayer.h"
 #include <cstdlib>
 #include <iostream>
+#include <cassert>
 
 #include "macro.h"
 
@@ -9,6 +10,7 @@
 namespace ducks
 {
 
+// Local methods implementation
 void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol )
 {
   for( int i = 0 ; i < nRow ; i++ )
@@ -20,13 +22,76 @@ void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol )
   }
 }
 
+// class HMM implementation
+int HMM::N_OBS = -1;
+std::map< uint8_t, int > HMM::evidencesHashes;
+
+
+void HMM::PopulateEvidencesHashes()
+{
+  int i = 0;
+
+  // the "all stop" case. / Can it really happen ? TODO
+  evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( ACTION_STOP, ACTION_STOP, BIRD_STOPPED ), i++ ) );
+
+  // the "going horizontal" cases
+  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
+  {
+    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( (EAction)iH, ACTION_STOP, MOVE_EAST ), i++ ) );
+    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( (EAction)iH, ACTION_STOP, MOVE_WEST ), i++ ) );
+  }
+
+  // the "going vertical" cases
+  for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
+  {
+    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( ACTION_STOP, (EAction)iV, MOVE_UP ), i++ ) );
+    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( ACTION_STOP, (EAction)iV, MOVE_DOWN ), i++ ) );
+  }
+
+  // general case
+  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
+  {
+    for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
+    {
+      // ugly, ugly, ugly
+      evidencesHashes.insert( std::pair< uint8_t, int >(
+        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_UP | MOVE_EAST) ), i++ ) );
+      evidencesHashes.insert( std::pair< uint8_t, int >(
+        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_UP | MOVE_WEST) ), i++ ) );
+      evidencesHashes.insert( std::pair< uint8_t, int >(
+        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_EAST) ), i++ ) );
+      evidencesHashes.insert( std::pair< uint8_t, int >(
+        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_DOWN) ), i++ ) );
+    }
+  }
+
+  // Now we can populate the actual evidence matrix, giving for each state
+  // the probability of observing an evidence, given we are in the said
+  // state.
+
+  N_OBS = evidencesHashes.size();
+
+#ifdef DEBUG
+  std::cout << "Number of possible evidences : " << N_OBS << std::endl;
+  std::cout << "Hashes for possible evidences : " << std::endl;
+  for( int i = 0 ; i < N_OBS ; i++ )
+    std::cout << evidencesHashes[ i ] << std::endl;
+#endif
+}
 
 uint8_t HMM::HashEvidence( CAction const & action )
 {
-  return HashEvidence( action.GetHAction(), action.GetVAction(), action.GetMovement() );
+  return HashEvidence( action.GetHAction(),
+                       action.GetVAction(),
+                       action.GetMovement() );
 }
 
-uint8_t HMM::HashEvidence( EAction actionH, EAction actionV, EMovement move )
+uint8_t HMM::HashEvidence
+(
+  EAction actionH,
+  EAction actionV,
+  EMovement move
+)
 {
   return actionH +
          ( actionV << 2 ) +
@@ -42,7 +107,17 @@ CAction HMM::UnhashEvidence( uint8_t hash, int birdNumber )
   return CAction( birdNumber, actionH, actionV, move );
 }
 
-void HMM::InitTheMatrix()
+void HMM::Learn( CDuck const & duck )
+{
+  // do the forward/backward stuff
+}
+
+CAction HMM::Predict( CDuck const & duck ) const
+{
+  // do clever stuff to predict next move of the duck
+}
+
+void HMM::InitTheMatrixes()
 {
   // In which we init/populate the various matrixes needed throughout the
   // hunting.
@@ -64,9 +139,18 @@ void HMM::InitTheMatrix()
     }
   }
 
-  // Since initializing the evidence matrix is tricky this is done in a
-  // separate function.
-  PopulateEvidenceMatrix();
+  // now we fill the evidences matrix
+  assert( N_OBS > 0 );
+
+  EvidenceMatrix.reserve( B_N_BEHAVIORS * N_OBS );
+
+  // at the beginning we assume for every state that we could equally
+  // observe every evidence in it. (Of course this is not true but that's
+  // what learning is for)
+  double obs_init = 1 / (double)N_OBS;
+
+  for( int i = 0 ; i < B_N_BEHAVIORS * N_OBS ; i++ )
+    EvidenceMatrix[ i ] = obs_init;
 
 #ifdef DEBUG
   std::cout << "PI" << std::endl;
@@ -78,68 +162,11 @@ void HMM::InitTheMatrix()
 #endif
 }
 
-void HMM::PopulateEvidenceMatrix()
-{
-  // first populate the map containing hashes for all possible evidences
-
-  // general case
-  int i = 0;
-
-  // the "all stop" case. / Can it really happen ? TODO
-  evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( ACTION_STOP, ACTION_STOP, BIRD_STOPPED ), i++ ) );
-
-  // the "going horizontal" cases
-  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
-  {
-    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( (EAction)iH, ACTION_STOP, MOVE_EAST ), i++ ) );
-    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( (EAction)iH, ACTION_STOP, MOVE_WEST ), i++ ) );
-  }
-
-  // the "going vertical" cases
-  for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
-  {
-    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( ACTION_STOP, (EAction)iV, MOVE_UP ), i++ ) );
-    evidencesHashes.insert( std::pair< uint8_t, int >( HashEvidence( ACTION_STOP, (EAction)iV, MOVE_DOWN ), i++ ) );
-  }
-
-  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
-  {
-    for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
-    {
-      // ugly, ugly, ugly
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-            HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_UP | MOVE_EAST) ), i++ ) );
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-            HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_UP | MOVE_WEST) ), i++ ) );
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-            HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_EAST) ), i++ ) );
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-            HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_DOWN) ), i++ ) );
-    }
-  }
-
-  // Now we can populate the actual evidence matrix, giving for each state
-  // the probability of observing an evidence, given we are in the said
-  // state.
-
-  N_OBS = evidencesHashes.size();
-
-#ifdef DEBUG
-  std::cout << "Number of possible evidences : " << N_OBS << std::endl;
-#endif
-
-  EvidenceMatrix.reserve( B_N_BEHAVIORS * N_OBS );
-
-  // at the beginning we assume for every state that we could equally
-  // observe every evidence in it. (Of course this is not true but that's
-  // what learning is for)
-  double obs_init = 1 / (double)N_OBS;
-
-  for( int i = 0 ; i < B_N_BEHAVIORS * N_OBS ; i++ )
-    EvidenceMatrix[ i ] = obs_init;
-}
-
-std::vector< double >  HMM::Forward( int t, std::vector< uint8_t > const & observations )
+std::vector< double >  HMM::Forward
+(
+  int t,
+  std::vector< uint8_t > const & observations
+)
 {
   std::vector< double > alphaT( B_N_BEHAVIORS, 0 );
 
@@ -182,7 +209,12 @@ std::vector< double >  HMM::Forward( int t, std::vector< uint8_t > const & obser
   return alphaT;
 }
 
-std::vector< double > HMM::Backward( int t, int lastT, std::vector< uint8_t > const & observations )
+std::vector< double > HMM::Backward
+(
+  int t,
+  int lastT,
+  std::vector< uint8_t > const & observations
+)
 {
   std::vector< double > betaT( B_N_BEHAVIORS, 0 );
 
@@ -227,6 +259,7 @@ std::vector< double > HMM::Backward( int t, int lastT, std::vector< uint8_t > co
 
 CPlayer::CPlayer()
 {
+  HMM::PopulateEvidencesHashes();
 }
 
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
@@ -250,9 +283,8 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
   * This skeleton guesses that all of them are white... they were the most likely after all!
   */
 
-  int     duckSeqLenght;
+  int     duckSeqLength;
   int     duckNumber;
-  uint8_t hash;
 
 #ifdef DEBUG
   std::cout << "Entering Guess" << std::endl;
@@ -272,9 +304,39 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
       std::cout << "\tDuck is alive" << std::endl;
 #endif
 
-       duckSeqLenght = pDucks[ i ].GetSeqLength();
+      /*
+      duckSeqLength = pDucks[ i ].GetSeqLength();
+      duckNumber = pDucks[ i ].GetAction( 0 ).GetBirdNumber();
 
-       duckNumber = pDucks[ i ].GetAction( 0 ).GetBirdNumber();
+      std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
+
+      for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
+        hashedEvidences[ i ] = HMM::HashEvidence( pDucks[ i ].GetAction( iSeq ) );
+
+      HMM::Forward( duckSeqLength-1, hashedEvidences );
+      HMM::Backward( 0, duckSeqLength-1, hashedEvidences );
+
+#ifdef DEBUG
+      std::cout << "Alphas : " << std::endl;
+      for( int a = 0 ; a < duckSeqLength ; a++ )
+      {
+        for( int ai = 0 ; ai < B_N_BEHAVIORS ; ai++ )
+          std::cout << HMM::alphas[ i ][ ai ] << '\t';
+
+        std::cout << std::endl;
+      }
+      std::cout << "Betas : " << std::endl;
+      for( int a = 0 ; a < duckSeqLength ; a++ )
+      {
+        for( int bi = 0 ; bi < B_N_BEHAVIORS ; bi++ )
+          std::cout << HMM::betas[ i ][ bi ] << '\t';
+
+        std::cout << std::endl;
+      }
+#endif
+      // now compute gammas and di-gammas
+      // and update PI, Transition and Evidence matrixes
+      */
     }
   }
 }

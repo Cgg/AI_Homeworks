@@ -20,45 +20,83 @@ enum EBehavior
 
 void PrintMatrix( std::vector< double > & theMatrix, int nRow, int nCol );
 
-struct HMM
+class  HMM
 {
-  int N_OBS;
-
   // All matrixes are row-wise stored, so to access element i,j of matrix A
   // the thing to do is A[ j + i*nCol ]
 
-  // Initial states probabilities, is 1 x B_N_BEHAVIORS
-  std::vector< double > PI;
+  // static data, common to all HMM
+  public:
 
-  // is B_N_BEHAVIORS x B_N_BEHAVIORS
-  std::vector< double > TransitionMatrix;
-  // is B_N_BEHAVIORS x N_OBS
-  std::vector< double > EvidenceMatrix;
+    static int N_OBS;
+    static std::map< uint8_t, int > evidencesHashes;
 
-  // each column is an alpha vector for a given t, from 0 to T-1
-  std::vector< std::vector< double > > alphas;
-  // each column is a beta vector for a given t, from 0 to T-1
-  std::vector< std::vector< double > > betas;
-  // each column is a gamma vector for a given t, from 0 to T-1
-  std::vector< std::vector< double > > gammas;
+  // static methods, helpers
+  public:
 
+    // initialization of static data, to be called from CPlayer CTOR
+    static void PopulateEvidencesHashes();
 
-  std::map< uint8_t, int > evidencesHashes;
+    // traduction between an action and its hash
+    static uint8_t HashEvidence( CAction const & action );
+    static uint8_t HashEvidence
+    (
+      EAction actionH,
+      EAction actionV,
+      EMovement move
+    );
 
-  // traduction between an action and its hash
-  static uint8_t HashEvidence( CAction const & action );
-  static uint8_t HashEvidence( EAction actionH, EAction actionV, EMovement move );
   static CAction UnhashEvidence( uint8_t hash, int birdNumber );
 
-  void InitTheMatrix();
-  void PopulateEvidenceMatrix();
+  // public methods
+  public:
 
-  // WARNING the observations here are already hashed
-  std::vector< double > Forward( int t, std::vector< uint8_t > const & observations );
-  // where lastT represent T, current time at which the calculation is done
-  std::vector< double > Backward( int t, int lastT, std::vector< uint8_t > const & observations );
+    HMM(){ InitTheMatrixes(); }
 
-  HMM(){ InitTheMatrix(); }
+    // Learn HMM parameters from a duck
+    void Learn( CDuck const & duck );
+
+    // Try to predict duck's next movements
+    CAction Predict( CDuck const & duck ) const;
+
+  // protected methods
+  protected:
+
+    void InitTheMatrixes();
+
+    // WARNING the observations here are already hashed
+    std::vector< double > Forward
+    (
+      int t,
+      std::vector< uint8_t > const & observations
+    );
+
+    // where lastT represent T, current time at which the calculation is done
+    std::vector< double > Backward
+    (
+      int t,
+      int lastT,
+      std::vector< uint8_t > const & observations
+    );
+
+  // protected data, HMM core
+  protected:
+    // Initial states probabilities, is 1 x B_N_BEHAVIORS
+    std::vector< double > PI;
+
+    // is B_N_BEHAVIORS x B_N_BEHAVIORS
+    std::vector< double > TransitionMatrix;
+    // is B_N_BEHAVIORS x N_OBS
+    std::vector< double > EvidenceMatrix;
+
+    // each column is an alpha vector for a given t, from 0 to T-1
+    std::vector< std::vector< double > > alphas;
+    // each column is a beta vector for a given t, from 0 to T-1
+    std::vector< std::vector< double > > betas;
+    // each column is a gamma vector for a given t, from 0 to T-1
+    std::vector< std::vector< double > > gammas;
+
+
 };
 
 class CPlayer
