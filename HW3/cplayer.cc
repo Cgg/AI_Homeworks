@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <ctime>
-#include <cmath>
+#include <math.h>
 
 #define DEBUG
 //#define DEBUG_EXT
@@ -146,7 +146,10 @@ void HMM::PopulateEvidencesHashes()
   std::cout << "Hashes for possible evidences : " << std::endl;
   std::map< uint8_t, int >::const_iterator itEv;
   for( itEv = evidencesHashes.begin() ; itEv != evidencesHashes.end() ; itEv++)
-    std::cout << (int)itEv->first << '\t' << itEv->second <<std::endl;
+  {
+    std::cout << (int)itEv->first << '\t' << itEv->second << '\t' << std::endl;
+    UnhashEvidence( itEv->first, 1 ).Print();
+  }
 #endif
 }
 
@@ -323,9 +326,11 @@ void HMM::InitTheMatrixes()
   std::cout << "PI" << std::endl;
   PrintMatrix( PI, 1, B_N_BEHAVIORS );
   CheckSum( PI, 1, B_N_BEHAVIORS );
+
   std::cout << std::endl << "Transitions" << std::endl;
   PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
   CheckSum( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
+
   std::cout << std::endl << "Evidences" << std::endl;
   PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
   CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
