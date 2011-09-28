@@ -184,7 +184,7 @@ void HMM::Learn( CDuck const & duck )
   std::cout << "HMM::Learn" << std::endl;
 #endif
 
-  double oldLikelyhood = -1e10; // something very negative;
+  double oldLikelyhood = MINUS_INFINITY; // something very negative;
   double newLikelyhood = oldLikelyhood;
 
   int duckSeqLength = duck.GetSeqLength();
@@ -266,7 +266,7 @@ void HMM::Learn( CDuck const & duck )
     std::cout << "Old LH is "  << oldLikelyhood
               << " new LH is " << newLikelyhood << std::endl;
 
-  } while( newLikelyhood > oldLikelyhood );
+  } while( ( newLikelyhood - oldLikelyhood ) > LEARN_TRESHOLD );
 }
 
 CAction HMM::Predict( CDuck const & duck ) const

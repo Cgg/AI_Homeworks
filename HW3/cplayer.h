@@ -27,6 +27,12 @@ class  HMM
   // All matrixes are row-wise stored, so to access element i,j of matrix A
   // the thing to do is A[ j + i*nCol ]
 
+  // constants
+  public:
+
+    static double const LEARN_TRESHOLD = 10;
+    static double const MINUS_INFINITY = -1e42;
+
   // static data, common to all HMM
   public:
 
