@@ -285,6 +285,44 @@ void HMM::Learn( CDuck const & duck )
 CAction HMM::Predict( CDuck const & duck ) const
 {
   // do clever stuff to predict next move of the duck
+  //
+  // Compute likelyhood of the given sequence of N actions
+  //
+  // for each possible sequence of N+1 actions compute the likelyhood
+  //
+  // pick up the biggest
+
+  PROB maxLikehood;
+  int  maxLikehoodIdx;
+
+  int duckSeqLength = duck.GetSeqLength();
+  int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
+  int evidenceIdx;
+
+  // hashes for the given sequence of evidences
+  std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
+
+  std::vector< PROB > scalFactors( duckSeqLength, 1 );
+
+  std::vector< std::vector< PROB > > alphas;
+
+  for( int i = 0 ; i < duckSeqLength ; i++ )
+    alphas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
+
+  for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
+    hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
+
+  Forward( alphas, scalFactors, duckSeqLength - 1, hashedEvidences );
+
+  for( int act = 0 ; act < N_OBS ; act++ )
+  {
+    // find index of action giving the maximum likehood
+  }
+
+  // convert it back to CAction
+  uint8_t hashedAction = evidencesHashes.find( maxLikehoodIdx )->second;
+
+  return UnhashEvidence( hashedAction, duck.GetLastAction().GetBirdNumber() );
 }
 
 void HMM::InitTheMatrixes()
