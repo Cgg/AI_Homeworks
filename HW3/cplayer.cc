@@ -16,7 +16,7 @@ namespace ducks
 {
 
 // Local methods implementation
-void PrintMatrix( std::vector< double > const & theMatrix, int nRow, int nCol )
+void PrintMatrix( std::vector< PROB > const & theMatrix, int nRow, int nCol )
 {
   for( int i = 0 ; i < nRow ; i++ )
   {
@@ -27,9 +27,9 @@ void PrintMatrix( std::vector< double > const & theMatrix, int nRow, int nCol )
   }
 }
 
-void CheckSum( std::vector< double > const &probaMatrix, int nRow, int nCol )
+void CheckSum( std::vector< PROB > const &probaMatrix, int nRow, int nCol )
 {
-  double rowSum;
+  PROB rowSum;
 
   for( int i = 0 ; i < nRow ; i++ )
   {
@@ -44,18 +44,18 @@ void CheckSum( std::vector< double > const &probaMatrix, int nRow, int nCol )
   }
 }
 
-std::vector< double > GenerateUniformNoisyProba( int nProba )
+std::vector< PROB > GenerateUniformNoisyProba( int nProba )
 {
-  std::vector< double > probas;
+  std::vector< PROB > probas;
 
-  double curProb;
+  PROB curProb;
 
-  double base = 1 / ( double )nProba;
+  PROB base = 1 / ( PROB )nProba;
 
   int epsilon = floor( ( base / 10.0 ) * 10000 );
   int halfEps = epsilon / 2;
 
-  double sum = 1.0;
+  PROB sum = 1.0;
 
   for( int i = 0 ; i < nProba - 1 ; i++ )
   {
@@ -187,31 +187,37 @@ void HMM::Learn( CDuck const & duck )
   std::cout << "HMM::Learn" << std::endl;
 #endif
 
-  double oldLikelyhood = MINUS_INFINITY; // something very negative;
-  double newLikelyhood = oldLikelyhood;
+  int  nIterations   = 1;
+  PROB oldLikelyhood = MINUS_INFINITY; // something very negative;
+  PROB newLikelyhood = oldLikelyhood;
 
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
   int evidenceIdx;
 
+  /*
+  if( duckSeqLength > 200 )
+    duckSeqLength = 200;
+    */
+
   // hashes for the given sequence of evidences
   std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
 
   // scaling factors
-  std::vector< double > scalFactors( duckSeqLength, 1 );
+  std::vector< PROB > scalFactors( duckSeqLength, 1 );
 
   // each column is an xxx vector for a given t, from 0 to T-1
-  std::vector< std::vector< double > > alphas;
-  std::vector< std::vector< double > > betas;
-  std::vector< std::vector< double > > diGammas;
-  std::vector< std::vector< double > > gammas;
+  std::vector< std::vector< PROB > > alphas;
+  std::vector< std::vector< PROB > > betas;
+  std::vector< std::vector< PROB > > diGammas;
+  std::vector< std::vector< PROB > > gammas;
 
   // initialize alphas and betas arrays
   for( int i = 0 ; i < duckSeqLength ; i++ )
-    alphas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
+    alphas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
 
   for( int i = 0 ; i < duckSeqLength ; i++ )
-    betas.push_back( std::vector< double >( B_N_BEHAVIORS, 0 ) );
+    betas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
 
   // get all hashes for the observations sequence
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
@@ -287,8 +293,8 @@ void HMM::InitTheMatrixes()
 
   TransitionMatrix.reserve( B_N_BEHAVIORS * B_N_BEHAVIORS );
 
-  std::vector< double > initPi = GenerateUniformNoisyProba( B_N_BEHAVIORS );
-  std::vector< double > initTr;
+  std::vector< PROB > initPi = GenerateUniformNoisyProba( B_N_BEHAVIORS );
+  std::vector< PROB > initTr;
 
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
@@ -310,7 +316,7 @@ void HMM::InitTheMatrixes()
   // at the beginning we assume for every state that we could equally
   // observe every evidence in it. (Of course this is not true but that's
   // what learning is for)
-  std::vector< double > initObs;
+  std::vector< PROB > initObs;
 
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
@@ -337,10 +343,10 @@ void HMM::InitTheMatrixes()
 #endif
 }
 
-std::vector< double >  HMM::Forward
+std::vector< PROB >  HMM::Forward
 (
-  std::vector< std::vector< double > > & alphas,
-  std::vector< double >                & scalFactors,
+  std::vector< std::vector< PROB > > & alphas,
+  std::vector< PROB >                & scalFactors,
   int t,
   std::vector< uint8_t > const & observations
 )
@@ -349,9 +355,9 @@ std::vector< double >  HMM::Forward
   std::cout << "Entering Forward routine with t = " << t << std::endl;
 #endif
 
-  double scalingFactor = 0;
+  PROB scalingFactor = 0;
 
-  std::vector< double > alphaT( B_N_BEHAVIORS, 0 );
+  std::vector< PROB > alphaT( B_N_BEHAVIORS, 0 );
 
   // getting the index of evidence's hash
   int evidenceIdx = evidencesHashes[ observations[ t ] ];
@@ -372,7 +378,7 @@ std::vector< double >  HMM::Forward
   else
   {
     // my, that's a yummy recursion !
-    std::vector< double > alphaPrev = Forward( alphas, scalFactors,
+    std::vector< PROB > alphaPrev = Forward( alphas, scalFactors,
                                          t - 1, observations );
 
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
@@ -409,10 +415,10 @@ std::vector< double >  HMM::Forward
   return alphaT;
 }
 
-std::vector< double > HMM::Backward
+std::vector< PROB > HMM::Backward
 (
-  std::vector< std::vector< double > > & betas,
-  std::vector< double > const & scalFactors,
+  std::vector< std::vector< PROB > > & betas,
+  std::vector< PROB > const & scalFactors,
   int t,
   int lastT,
   std::vector< uint8_t > const & observations
@@ -422,7 +428,7 @@ std::vector< double > HMM::Backward
   std::cout << "Entering Backward routine with t = " << t << std::endl;
 #endif
 
-  std::vector< double > betaT( B_N_BEHAVIORS, 0 );
+  std::vector< PROB > betaT( B_N_BEHAVIORS, 0 );
 
   // getting the index of evidence's hash
   int evidenceIdx = evidencesHashes[ observations[ t ] ];
@@ -441,7 +447,7 @@ std::vector< double > HMM::Backward
   else
   {
     // recursion... me liek it
-    std::vector< double > betaNext = Backward( betas, scalFactors, t+1, 
+    std::vector< PROB > betaNext = Backward( betas, scalFactors, t+1, 
                                         lastT, observations );
 
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
@@ -491,8 +497,8 @@ void HMM::ComputeGammas
   {
     evidenceIdx = evidencesHashes[ observations[ t + 1 ] ];
 
-    diGammas.push_back( std::vector< double >( B_N_BEHAVIORS * B_N_BEHAVIORS ) );
-    gammas.push_back( std::vector< double >( B_N_BEHAVIORS ) );
+    diGammas.push_back( std::vector< PROB >( B_N_BEHAVIORS * B_N_BEHAVIORS ) );
+    gammas.push_back( std::vector< PROB >( B_N_BEHAVIORS ) );
 
     denominator = 0;
 
@@ -531,8 +537,8 @@ void HMM::ComputeGammas
 
 void HMM::UpdateModel
 (
-  std::vector< std::vector< double > > const & diGammas,
-  std::vector< std::vector< double > > const & gammas,
+  std::vector< std::vector< PROB > > const & diGammas,
+  std::vector< std::vector< PROB > > const & gammas,
   std::vector< uint8_t  >              const & observations
 )
 {
@@ -548,8 +554,8 @@ void HMM::UpdateModel
 
   int evidenceIdx;
 
-  double numerator;
-  double denominator;
+  PROB numerator;
+  PROB denominator;
 
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
@@ -589,13 +595,13 @@ void HMM::UpdateModel
   }
 }
 
-double HMM::ComputeNewLikelyhood
+PROB HMM::ComputeNewLikelyhood
 (
-  std::vector< double > const & scalFactors
+  std::vector< PROB > const & scalFactors
 )
   const
 {
-  double logProb = 0;
+  PROB logProb = 0;
 
   for( int t = 0 ; t < scalFactors.size() ; t++ )
   {

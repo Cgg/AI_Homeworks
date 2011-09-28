@@ -18,9 +18,11 @@ enum EBehavior
   B_N_BEHAVIORS   // numering element
 };
 
-void PrintMatrix( std::vector< double > const & theMatrix, int nRow, int nCol );
-std::vector< double > GenerateUniformNoisyProba( int nProba );
-void CheckSum( std::vector< double > const & probaMatrix, int nRow, int nCol );
+typedef long double PROB;
+
+void PrintMatrix( std::vector< PROB > const & theMatrix, int nRow, int nCol );
+std::vector< PROB > GenerateUniformNoisyProba( int nProba );
+void CheckSum( std::vector< PROB > const & probaMatrix, int nRow, int nCol );
 
 class  HMM
 {
@@ -30,8 +32,8 @@ class  HMM
   // constants
   public:
 
-    static double const LEARN_TRESHOLD = 10;
-    static double const MINUS_INFINITY = -1e42;
+    static PROB const LEARN_TRESHOLD = 0.001;
+    static PROB const MINUS_INFINITY = -1e42;
 
   // static data, common to all HMM
   public:
@@ -73,19 +75,19 @@ class  HMM
     void InitTheMatrixes();
 
     // WARNING the observations here are already hashed
-    std::vector< double > Forward
+    std::vector< PROB > Forward
     (
-      std::vector< std::vector< double > > & alphas,
-      std::vector< double >                & scalFactors,
+      std::vector< std::vector< PROB > > & alphas,
+      std::vector< PROB >                & scalFactors,
       int t,
       std::vector< uint8_t > const & observations
     );
 
     // where lastT represent T, current time at which the calculation is done
-    std::vector< double > Backward
+    std::vector< PROB > Backward
     (
-      std::vector< std::vector< double > > & betas,
-      std::vector< double > const & scalFactors,
+      std::vector< std::vector< PROB > > & betas,
+      std::vector< PROB > const & scalFactors,
       int t,
       int lastT,
       std::vector< uint8_t > const & observations
@@ -93,31 +95,31 @@ class  HMM
 
     void ComputeGammas
     (
-      std::vector< std::vector< double > >       & diGammas,
-      std::vector< std::vector< double > >       & gammas,
-      std::vector< std::vector< double > > const & alphas,
-      std::vector< std::vector< double > > const & betas,
+      std::vector< std::vector< PROB > >       & diGammas,
+      std::vector< std::vector< PROB > >       & gammas,
+      std::vector< std::vector< PROB > > const & alphas,
+      std::vector< std::vector< PROB > > const & betas,
       std::vector< uint8_t >               const & observations
     ) const;
 
     void UpdateModel
     (
-      std::vector< std::vector< double > > const & diGammas,
-      std::vector< std::vector< double > > const & gammas,
+      std::vector< std::vector< PROB > > const & diGammas,
+      std::vector< std::vector< PROB > > const & gammas,
       std::vector< uint8_t >               const & observations
     );
 
-    double ComputeNewLikelyhood( std::vector< double > const & scalFactor ) const;
+    PROB ComputeNewLikelyhood( std::vector< PROB > const & scalFactor ) const;
 
   // protected data, HMM core
   protected:
     // Initial states probabilities, is 1 x B_N_BEHAVIORS
-    std::vector< double > PI;
+    std::vector< PROB > PI;
 
     // is B_N_BEHAVIORS x B_N_BEHAVIORS
-    std::vector< double > TransitionMatrix;
+    std::vector< PROB > TransitionMatrix;
     // is B_N_BEHAVIORS x N_OBS
-    std::vector< double > EvidenceMatrix;
+    std::vector< PROB > EvidenceMatrix;
 
 };
 
