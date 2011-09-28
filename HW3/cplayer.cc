@@ -131,7 +131,7 @@ void HMM::PopulateEvidencesHashes()
       evidencesHashes.insert( std::pair< uint8_t, int >(
         HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_EAST) ), i++ ) );
       evidencesHashes.insert( std::pair< uint8_t, int >(
-        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_DOWN) ), i++ ) );
+        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_WEST) ), i++ ) );
     }
   }
 
