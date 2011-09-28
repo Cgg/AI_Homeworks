@@ -7,6 +7,7 @@
 #include <math.h>
 
 #define DEBUG
+#define DEBUG_GAM
 //#define DEBUG_EXT
 //#define DEBUG_RAND
 //#define DEBUG_FW
@@ -272,8 +273,11 @@ void HMM::Learn( CDuck const & duck )
     CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 #endif
 
-    std::cout << "Old LH is "  << oldLikelyhood
+    std::cout << "At iteration " << nIterations
+              << " Old LH is "  << oldLikelyhood
               << " new LH is " << newLikelyhood << std::endl;
+
+    nIterations++;
 
   } while( ( newLikelyhood - oldLikelyhood ) > LEARN_TRESHOLD );
 }
@@ -479,17 +483,25 @@ std::vector< PROB > HMM::Backward
 
 void HMM::ComputeGammas
 (
-  std::vector< std::vector< double > >       & diGammas,
-  std::vector< std::vector< double > >       & gammas,
-  std::vector< std::vector< double > > const & alphas,
-  std::vector< std::vector< double > > const & betas,
-  std::vector< uint8_t >               const & observations
+  std::vector< std::vector< PROB > >       & diGammas,
+  std::vector< std::vector< PROB > >       & gammas,
+  std::vector< std::vector< PROB > > const & alphas,
+  std::vector< std::vector< PROB > > const & betas,
+  std::vector< uint8_t >             const & observations
 )
   const
 {
-  double denominator;
-  double curGammaI;
-  int    evidenceIdx;
+#ifdef DEBUG_GAM
+  std::cout << "HMM::ComputeGammas" << std::endl;
+#endif
+
+  // NEVAH FORGET
+  diGammas.clear();
+  gammas.clear();
+
+  PROB denominator;
+  PROB curGammaI;
+  int  evidenceIdx;
 
   int duckSeqLength = observations.size();
 
@@ -533,6 +545,22 @@ void HMM::ComputeGammas
       gammas[ t ][ i ] = curGammaI;
     }
   }
+
+#ifdef DEBUG_GAM
+  std::cout << "DiGammas from 0 to T-2 : " << diGammas.size() << std::endl;
+  for( int t = 0 ; t < diGammas.size() ; t++ )
+  {
+    PrintMatrix( diGammas[ t ], 1, B_N_BEHAVIORS * B_N_BEHAVIORS );
+    CheckSum( diGammas[ t ], 1, B_N_BEHAVIORS * B_N_BEHAVIORS );
+  }
+
+  std::cout << "Gammas from 0 to T-2 :" << gammas.size() << std::endl;
+  for( int t = 0 ; t < gammas.size() ; t++ )
+  {
+    PrintMatrix( gammas[ t ], 1, B_N_BEHAVIORS );
+    CheckSum( gammas[ t ], 1, B_N_BEHAVIORS );
+  }
+#endif
 }
 
 void HMM::UpdateModel
@@ -583,9 +611,12 @@ void HMM::UpdateModel
       for( int t = 0 ; t < gammas.size() ; t++ )
       {
         evidenceIdx = evidencesHashes[ observations[ t ] ];
+        //std::cout << "at t = " << t << " we do obs " << (int)observations[ t ] << " which has idx " << evidenceIdx << std::endl;
 
         if( evidenceIdx == j )
+        {
           numerator += gammas[ t ][ i ];
+        }
 
         denominator += gammas[ t ][ i ];
       }
