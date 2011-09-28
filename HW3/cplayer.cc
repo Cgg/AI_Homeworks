@@ -389,6 +389,9 @@ std::vector< double >  HMM::Forward
   // do the actual scaling
   scalingFactor = 1 / scalingFactor;
 
+  // populate the scaling factor array
+  scalFactors[ t ] = scalingFactor;
+
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     alphaT[ i ] *= scalingFactor;
 
@@ -396,9 +399,6 @@ std::vector< double >  HMM::Forward
   std::cout << "Alpha at t = " << t << std::endl;
   PrintMatrix( alphaT, 1, B_N_BEHAVIORS );
 #endif
-
-  // populate the scaling factor array
-  scalFactors[ t ] = scalingFactor;
 
   // populate the alphas matrix
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
