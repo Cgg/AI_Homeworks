@@ -140,14 +140,13 @@ void CClient::Run(const std::string &pHost,const std::string &pPort,
         CTime lTime;
 
         mState.mNumNewTurns=ReadDucks();
-
+        
         if(ReadState(lTime))
         {
-            if(mState.mDucks.size()==1)
+            if(mState.mDucks.size()>1)
             {
                 if(mStandalone)
                     lTime=CTime::GetCurrent()+60000000;
-                std::cout<<"Guessing..."<<std::endl;
                 mPlayer.Guess(mState.mDucks,lTime);
                 WriteGuess();
             }
