@@ -7,7 +7,8 @@
 #include <math.h>
 
 #define DEBUG
-#define DEBUG_GAM
+#define DEBUG_PRED
+//#define DEBUG_GAM
 //#define DEBUG_EXT
 //#define DEBUG_RAND
 //#define DEBUG_FW
@@ -196,11 +197,6 @@ void HMM::Learn( CDuck const & duck )
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
   int evidenceIdx;
 
-  /*
-  if( duckSeqLength > 200 )
-    duckSeqLength = 200;
-    */
-
   // hashes for the given sequence of evidences
   std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
 
@@ -284,6 +280,9 @@ void HMM::Learn( CDuck const & duck )
 
 CAction HMM::Predict( CDuck const & duck ) const
 {
+#ifdef DEBUG_PRED
+  std::cout << "HMM::Predict" << std::endl;
+#endif
   // do clever stuff to predict next move of the duck
   //
   // Compute likelyhood of the given sequence of N actions
@@ -292,8 +291,9 @@ CAction HMM::Predict( CDuck const & duck ) const
   //
   // pick up the biggest
 
-  PROB maxLikehood;
-  int  maxLikehoodIdx;
+  PROB    maxLikehood = MINUS_INFINITY;
+  PROB    curLikelyhood;
+  uint8_t maxLikehoodHash = 10;
 
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
@@ -314,15 +314,74 @@ CAction HMM::Predict( CDuck const & duck ) const
 
   Forward( alphas, scalFactors, duckSeqLength - 1, hashedEvidences );
 
-  for( int act = 0 ; act < N_OBS ; act++ )
+#ifdef DEBUG_PRED
+  std::cout << ComputeNewLikelyhood( scalFactors ) << std::endl;
+#endif
+
+  // make room for the N+1 observation
+  alphas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
+  scalFactors.push_back( 1 );
+
+  std::map< uint8_t, int >::const_iterator itHashes;
+
+  for( itHashes = evidencesHashes.begin() ;
+       itHashes != evidencesHashes.end() ;
+       itHashes++ )
   {
+    scalFactors[ duckSeqLength ] = 0;
+
     // find index of action giving the maximum likehood
+    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+    {
+      alphas[ duckSeqLength ][ i ] = 0;
+
+      for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
+      {
+        alphas[ duckSeqLength ][ i ] +=
+          alphas[ duckSeqLength - 1 ][ j ] *
+          TransitionMatrix[ j + ( B_N_BEHAVIORS*i ) ];
+      }
+
+      alphas[ duckSeqLength ][ i ] *= 
+        EvidenceMatrix[ itHashes->second + ( N_OBS * i ) ];
+
+      scalFactors[ duckSeqLength ] += alphas[ duckSeqLength ][ i ];
+    }
+
+    scalFactors[ duckSeqLength ] = 1 / scalFactors[ duckSeqLength ];
+
+    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+      alphas[ duckSeqLength ][ i ] =
+        alphas[ duckSeqLength ][ i ] * scalFactors[ duckSeqLength ];
+
+    // compute likelyhood
+    curLikelyhood = ComputeNewLikelyhood( scalFactors );
+
+#ifdef DEBUG_PRED
+    std::cout << "For action " << (int)itHashes->first
+              << " last alpha is " << std::endl;
+    PrintMatrix( alphas[ duckSeqLength ], 1, B_N_BEHAVIORS );
+    std::cout << "And last scale factor is " << scalFactors[ duckSeqLength ] << std::endl;
+    std::cout << "Likelyhood is " << curLikelyhood << std::endl;
+#endif
+
+    if( curLikelyhood > maxLikehood )
+    {
+#ifdef DEBUG_PRED
+      std::cout << ">>>Picking up current move" << std::endl;
+#endif
+      maxLikehood     = curLikelyhood;
+      maxLikehoodHash = itHashes->first;
+    }
+
+#ifdef DEBUG_PRED
+    std::cout << std::endl;
+#endif
   }
 
   // convert it back to CAction
-  uint8_t hashedAction = evidencesHashes.find( maxLikehoodIdx )->second;
-
-  return UnhashEvidence( hashedAction, duck.GetLastAction().GetBirdNumber() );
+  return UnhashEvidence( maxLikehoodHash,
+                         duck.GetLastAction().GetBirdNumber() );
 }
 
 void HMM::InitTheMatrixes()
@@ -734,6 +793,7 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
       HMM model;
 
       model.Learn( pDucks[ i ] );
+      model.Predict( pDucks[ i ] );
     }
   }
 }
