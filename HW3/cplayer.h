@@ -81,7 +81,7 @@ class  HMM
       std::vector< PROB >                & scalFactors,
       int t,
       std::vector< uint8_t > const & observations
-    );
+    ) const;
 
     // where lastT represent T, current time at which the calculation is done
     std::vector< PROB > Backward
@@ -91,7 +91,7 @@ class  HMM
       int t,
       int lastT,
       std::vector< uint8_t > const & observations
-    );
+    ) const;
 
     void ComputeGammas
     (

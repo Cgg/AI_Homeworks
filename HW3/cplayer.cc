@@ -354,6 +354,7 @@ std::vector< PROB >  HMM::Forward
   int t,
   std::vector< uint8_t > const & observations
 )
+  const
 {
 #ifdef DEBUG_FW
   std::cout << "Entering Forward routine with t = " << t << std::endl;
@@ -427,6 +428,7 @@ std::vector< PROB > HMM::Backward
   int lastT,
   std::vector< uint8_t > const & observations
 )
+  const
 {
 #ifdef DEBUG_BW
   std::cout << "Entering Backward routine with t = " << t << std::endl;
