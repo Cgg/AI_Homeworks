@@ -81,7 +81,7 @@ class  HMM
       std::vector< std::vector< PROB > > & alphas,
       std::vector< PROB >                & scalFactors,
       int t,
-      std::vector< uint8_t > const & observations
+      std::vector< int > const & observations
     ) const;
 
     // where lastT represent T, current time at which the calculation is done
@@ -91,7 +91,7 @@ class  HMM
       std::vector< PROB > const & scalFactors,
       int t,
       int lastT,
-      std::vector< uint8_t > const & observations
+      std::vector< int > const & observations
     ) const;
 
     void ComputeGammas
@@ -100,14 +100,14 @@ class  HMM
       std::vector< std::vector< PROB > >       & gammas,
       std::vector< std::vector< PROB > > const & alphas,
       std::vector< std::vector< PROB > > const & betas,
-      std::vector< uint8_t >               const & observations
+      std::vector< int >               const & observations
     ) const;
 
     void UpdateModel
     (
       std::vector< std::vector< PROB > > const & diGammas,
       std::vector< std::vector< PROB > > const & gammas,
-      std::vector< uint8_t >               const & observations
+      std::vector< int >               const & observations
     );
 
     PROB ComputeNewLikelyhood( std::vector< PROB > const & scalFactor ) const;

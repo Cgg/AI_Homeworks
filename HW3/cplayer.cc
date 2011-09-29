@@ -195,10 +195,9 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
-  int evidenceIdx;
 
   // hashes for the given sequence of evidences
-  std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
+  std::vector< int > evidenceIdxs( duckSeqLength, 0 );
 
   // scaling factors
   std::vector< PROB > scalFactors( duckSeqLength, 1 );
@@ -211,7 +210,7 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 
   // get all hashes for the observations sequence
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
-    hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
+    evidenceIdxs[ iSeq ] = evidencesHashes[ HashEvidence( duck.GetAction( iSeq ) ) ];
 
   CTime mark;
   int64_t itTime;
@@ -220,12 +219,12 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
   {
     mark = due.GetCurrent();
 
-    Forward( alphas, scalFactors, duckSeqLength-1, hashedEvidences );
-    Backward( betas, scalFactors, 0, duckSeqLength-1, hashedEvidences );
+    Forward( alphas, scalFactors, duckSeqLength-1, evidenceIdxs );
+    Backward( betas, scalFactors, 0, duckSeqLength-1, evidenceIdxs );
 
-    ComputeGammas( diGammas, gammas, alphas, betas, hashedEvidences );
+    ComputeGammas( diGammas, gammas, alphas, betas, evidenceIdxs );
 
-    UpdateModel( diGammas, gammas, hashedEvidences );
+    UpdateModel( diGammas, gammas, evidenceIdxs );
 
     oldLikelyhood = newLikelyhood;
 
@@ -306,16 +305,16 @@ CAction HMM::Predict( CDuck const & duck ) const
   int evidenceIdx;
 
   // hashes for the given sequence of evidences
-  std::vector< uint8_t > hashedEvidences( duckSeqLength, 0 );
+  std::vector< int > observations( duckSeqLength, 0 );
 
   std::vector< PROB > scalFactors( duckSeqLength, 1 );
 
   std::vector< std::vector< PROB > > alphas( duckSeqLength, std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
 
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
-    hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
+    observations[ iSeq ] = evidencesHashes[ HashEvidence( duck.GetAction( iSeq ) ) ];
 
-  Forward( alphas, scalFactors, duckSeqLength - 1, hashedEvidences );
+  Forward( alphas, scalFactors, duckSeqLength - 1, observations );
 
 #ifdef DEBUG_PRED
   std::cout << ComputeNewLikelyhood( scalFactors ) << std::endl;
@@ -458,7 +457,7 @@ std::vector< PROB >  HMM::Forward
   std::vector< std::vector< PROB > > & alphas,
   std::vector< PROB >                & scalFactors,
   int t,
-  std::vector< uint8_t > const & observations
+  std::vector< int > const & observations
 )
   const
 {
@@ -471,7 +470,7 @@ std::vector< PROB >  HMM::Forward
   std::vector< PROB > alphaT( B_N_BEHAVIORS, 0 );
 
   // getting the index of evidence's hash
-  int evidenceIdx = evidencesHashes[ observations[ t ] ];
+  int evidenceIdx = observations[ t ];
 
   if( t == 0 )
   {
@@ -532,7 +531,7 @@ std::vector< PROB > HMM::Backward
   std::vector< PROB > const & scalFactors,
   int t,
   int lastT,
-  std::vector< uint8_t > const & observations
+  std::vector< int > const & observations
 )
   const
 {
@@ -543,7 +542,7 @@ std::vector< PROB > HMM::Backward
   std::vector< PROB > betaT( B_N_BEHAVIORS, 0 );
 
   // getting the index of evidence's hash
-  int evidenceIdx = evidencesHashes[ observations[ t ] ];
+  int evidenceIdx = observations[ t ];
 
   if( t == lastT )
   {
@@ -595,7 +594,7 @@ void HMM::ComputeGammas
   std::vector< std::vector< PROB > >       & gammas,
   std::vector< std::vector< PROB > > const & alphas,
   std::vector< std::vector< PROB > > const & betas,
-  std::vector< uint8_t >             const & observations
+  std::vector< int >             const & observations
 )
   const
 {
@@ -611,7 +610,7 @@ void HMM::ComputeGammas
 
   for( int t = 0 ; t < duckSeqLength - 1 ; t++ ) // carefull, there are T-1 elements in gammas and diGammas
   {
-    evidenceIdx = evidencesHashes[ observations[ t + 1 ] ];
+    evidenceIdx = observations[ t + 1 ];
 
     denominator = 0;
 
@@ -668,7 +667,7 @@ void HMM::UpdateModel
 (
   std::vector< std::vector< PROB > > const & diGammas,
   std::vector< std::vector< PROB > > const & gammas,
-  std::vector< uint8_t  >              const & observations
+  std::vector< int  >              const & observations
 )
 {
 #ifdef DEBUG
@@ -711,7 +710,7 @@ void HMM::UpdateModel
 
       for( int t = 0 ; t < gammas.size() ; t++ )
       {
-        evidenceIdx = evidencesHashes[ observations[ t ] ];
+        evidenceIdx = observations[ t ];
         //std::cout << "at t = " << t << " we do obs " << (int)observations[ t ] << " which has idx " << evidenceIdx << std::endl;
 
         if( evidenceIdx == j )
