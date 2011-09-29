@@ -274,7 +274,8 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 
     nIterations++;
 
-  } while( due - due.GetCurrent() > itTime );
+  } while( ( due - due.GetCurrent() > itTime ) && 
+             newLikelyhood >= oldLikelyhood );
 
   std::cerr<<nIterations<<std::endl;
   /*
