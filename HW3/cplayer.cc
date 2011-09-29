@@ -358,7 +358,7 @@ CAction HMM::Predict( CDuck const & duck ) const
     curLikelyhood = ComputeNewLikelyhood( scalFactors );
 
 #ifdef DEBUG_PRED
-    std::cout << "For action " << (int)itHashes->first
+    std::cout << "For action " << (int)itHashes->first << " (idx " << itHashes->second << ") "
               << " last alpha is " << std::endl;
     PrintMatrix( alphas[ duckSeqLength ], 1, B_N_BEHAVIORS );
     std::cout << "And last scale factor is " << scalFactors[ duckSeqLength ] << std::endl;
@@ -380,8 +380,12 @@ CAction HMM::Predict( CDuck const & duck ) const
   }
 
   // convert it back to CAction
-  return UnhashEvidence( maxLikehoodHash,
+  CAction act = UnhashEvidence( maxLikehoodHash,
                          duck.GetLastAction().GetBirdNumber() );
+
+  act.Print();
+
+  return act;
 }
 
 void HMM::InitTheMatrixes()
