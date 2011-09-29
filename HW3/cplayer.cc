@@ -241,14 +241,17 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
     nIterations++;
 
   } while( ( due - due.GetCurrent() > itTime ) && 
-             newLikelyhood >= oldLikelyhood );
+             newLikelyhood > oldLikelyhood );
 
   std::cerr<<nIterations<<std::endl;
-  /*
+
+#ifdef DEBUG
+  std::cerr << "Final matrices :" << std::endl;
   PrintMatrix( PI, 1, B_N_BEHAVIORS );
   PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
   PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
-  */
+#endif
+
 }
 
 CAction HMM::Predict( CDuck const & duck ) const
