@@ -157,7 +157,7 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 
   int  nIterations   = 1;
   PROB oldLikelyhood = MINUS_INFINITY; // something very negative;
-  PROB newLikelyhood = oldLikelyhood;
+  PROB newLikelyhood = -100000;
 
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
@@ -179,9 +179,10 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
     evidenceIdxs[ iSeq ] = evidencesHashes[ HashEvidence( duck.GetAction( iSeq ) ) ];
 
   CTime mark;
-  int64_t itTime;
+  int64_t itTime = 0;
 
-  do
+  while( ( due - due.GetCurrent() > itTime ) && 
+             newLikelyhood > oldLikelyhood )
   {
     mark = due.GetCurrent();
 
@@ -240,8 +241,7 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 
     nIterations++;
 
-  } while( ( due - due.GetCurrent() > itTime ) && 
-             newLikelyhood > oldLikelyhood );
+  }
 
   std::cerr<<nIterations<<std::endl;
 
