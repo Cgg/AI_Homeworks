@@ -14,7 +14,7 @@ enum EBehavior
   B_MIGRATING,
   B_QUACKING,
   B_PANICKING,
-  B_FEIGNING,     // feigning death (suckers)
+  //B_FEIGNING,     // feigning death (suckers)
   B_N_BEHAVIORS   // numering element
 };
 
