@@ -98,46 +98,6 @@ void HMM::PopulateEvidencesHashes()
 {
   int i = 0;
 
-  /*
-  // the "all stop" case. / Can it really happen ? TODO
-  evidencesHashes.insert( std::pair< uint8_t, int >(
-    HashEvidence( ACTION_STOP, ACTION_STOP, BIRD_STOPPED ), i++ ) );
-
-  // the "going horizontal" cases
-  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
-  {
-    evidencesHashes.insert( std::pair< uint8_t, int >(
-      HashEvidence( (EAction)iH, ACTION_STOP, MOVE_EAST ), i++ ) );
-    evidencesHashes.insert( std::pair< uint8_t, int >(
-      HashEvidence( (EAction)iH, ACTION_STOP, MOVE_WEST ), i++ ) );
-  }
-
-  // the "going vertical" cases
-  for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
-  {
-    evidencesHashes.insert( std::pair< uint8_t, int >(
-      HashEvidence( ACTION_STOP, (EAction)iV, MOVE_UP ), i++ ) );
-    evidencesHashes.insert( std::pair< uint8_t, int >(
-      HashEvidence( ACTION_STOP, (EAction)iV, MOVE_DOWN ), i++ ) );
-  }
-
-  // general case
-  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
-  {
-    for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
-    {
-      // ugly, ugly, ugly
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_UP | MOVE_EAST) ), i++ ) );
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_UP | MOVE_WEST) ), i++ ) );
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_EAST) ), i++ ) );
-      evidencesHashes.insert( std::pair< uint8_t, int >(
-        HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_WEST) ), i++ ) );
-    }
-  }
-  */
   for( int iH = 0 ; iH < ACTION_STOP+1 ; iH++ )
   {
     for( int iV = 0 ; iV < ACTION_STOP+1 ; iV++ )
