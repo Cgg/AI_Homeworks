@@ -23,9 +23,9 @@ void PrintMatrix( std::vector< PROB > const & theMatrix, int nRow, int nCol )
   for( int i = 0 ; i < nRow ; i++ )
   {
     for( int j = 0 ; j < nCol ; j++ )
-      std::cout << theMatrix[ ( i * nCol ) + j ] << '\t' ;
+      std::cerr << theMatrix[ ( i * nCol ) + j ] << '\t' ;
 
-    std::cout << std::endl;
+    std::cerr << std::endl;
   }
 }
 
@@ -42,7 +42,7 @@ void CheckSum( std::vector< PROB > const &probaMatrix, int nRow, int nCol )
       rowSum += probaMatrix[ j + ( nCol * i ) ];
     }
 
-    std::cout << "sum of row " << i << " is " << rowSum << std::endl;
+    std::cerr << "sum of row " << i << " is " << rowSum << std::endl;
   }
 }
 
@@ -79,11 +79,11 @@ std::vector< PROB > GenerateUniformNoisyProba( int nProba )
   sum = 0;
 
 #ifdef DEBUG_RAND
-  std::cout << "Vector of probabilities : " << std::endl;
+  std::cerr << "Vector of probabilities : " << std::endl;
   for( int i = 0 ; i < nProba ; i++ )
-    std::cout << probas[ i ] << std::endl;
+    std::cerr << probas[ i ] << std::endl;
 
-  std::cout << "Left-over : " << sum << std::endl;
+  std::cerr << "Left-over : " << sum << std::endl;
 #endif
 
   return probas;
@@ -143,9 +143,9 @@ void HMM::PopulateEvidencesHashes()
 
   N_OBS = evidencesHashes.size();
 
-#ifdef DEBUG
-  std::cout << "Number of possible evidences : " << N_OBS << std::endl;
-  std::cout << "Hashes for possible evidences : " << std::endl;
+#ifdef DEBUG_INIT
+  std::cerr << "Number of possible evidences : " << N_OBS << std::endl;
+  std::cerr << "Hashes for possible evidences : " << std::endl;
   std::map< uint8_t, int >::const_iterator itEv;
   for( itEv = evidencesHashes.begin() ; itEv != evidencesHashes.end() ; itEv++)
   {
@@ -186,7 +186,7 @@ CAction HMM::UnhashEvidence( uint8_t hash, int birdNumber )
 void HMM::Learn( CDuck const & duck, CTime const & due )
 {
 #ifdef DEBUG
-  std::cout << "HMM::Learn" << std::endl;
+  std::cerr << "HMM::Learn" << std::endl;
 #endif
 
   int  nIterations   = 1;
@@ -231,41 +231,41 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
     newLikelyhood = ComputeNewLikelyhood( scalFactors );
 
 #ifdef DEBUG_EXT
-    std::cout << "Scaling factors from 0 to T-1" << std::endl;
+    std::cerr << "Scaling factors from 0 to T-1" << std::endl;
     for( int i = 0 ; i < duckSeqLength ; i++ )
-      std::cout << scalFactors[ i ] << std::endl;
+      std::cerr << scalFactors[ i ] << std::endl;
 
-    std::cout << "Alphas from 0 to T-1 : " << std::endl;
+    std::cerr << "Alphas from 0 to T-1 : " << std::endl;
     for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     {
       for( int ai = 0 ; ai < B_N_BEHAVIORS ; ai++ )
-        std::cout << alphas[ iSeq ][ ai ] << '\t';
+        std::cerr << alphas[ iSeq ][ ai ] << '\t';
 
-      std::cout << std::endl;
+      std::cerr << std::endl;
     }
-    std::cout << "Betas from 0 to T-1 : " << std::endl;
+    std::cerr << "Betas from 0 to T-1 : " << std::endl;
     for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     {
       for( int bi = 0 ; bi < B_N_BEHAVIORS ; bi++ )
-        std::cout << betas[ iSeq ][ bi ] << '\t';
+        std::cerr << betas[ iSeq ][ bi ] << '\t';
 
-      std::cout << std::endl;
+      std::cerr << std::endl;
     }
 #endif
 #ifdef DEBUG
-    std::cout << "New PI" << std::endl;
+    std::cerr << "New PI" << std::endl;
     PrintMatrix( PI, 1, B_N_BEHAVIORS );
     CheckSum( PI, 1, B_N_BEHAVIORS );
 
-    std::cout << std::endl << "New Transitions" << std::endl;
+    std::cerr << std::endl << "New Transitions" << std::endl;
     PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
     CheckSum( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
 
-    std::cout << std::endl << "New Evidences" << std::endl;
+    std::cerr << std::endl << "New Evidences" << std::endl;
     PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
     CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 
-    std::cout << "At iteration " << nIterations
+    std::cerr << "At iteration " << nIterations
               << " Old LH is "  << oldLikelyhood
               << " new LH is " << newLikelyhood << std::endl;
 #endif
@@ -287,7 +287,7 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 CAction HMM::Predict( CDuck const & duck ) const
 {
 #ifdef DEBUG_PRED
-  std::cout << "HMM::Predict" << std::endl;
+  std::cerr << "HMM::Predict" << std::endl;
 #endif
   // do clever stuff to predict next move of the duck
   //
@@ -318,7 +318,7 @@ CAction HMM::Predict( CDuck const & duck ) const
   Forward( alphas, scalFactors, duckSeqLength - 1, observations );
 
 #ifdef DEBUG_PRED
-  std::cout << ComputeNewLikelyhood( scalFactors ) << std::endl;
+  std::cerr << ComputeNewLikelyhood( scalFactors ) << std::endl;
 #endif
 
   // make room for the N+1 observation
@@ -361,24 +361,24 @@ CAction HMM::Predict( CDuck const & duck ) const
     curLikelyhood = ComputeNewLikelyhood( scalFactors );
 
 #ifdef DEBUG_PRED
-    std::cout << "For action " << (int)itHashes->first << " (idx " << itHashes->second << ") "
+    std::cerr << "For action " << (int)itHashes->first << " (idx " << itHashes->second << ") "
               << " last alpha is " << std::endl;
     PrintMatrix( alphas[ duckSeqLength ], 1, B_N_BEHAVIORS );
-    std::cout << "And last scale factor is " << scalFactors[ duckSeqLength ] << std::endl;
-    std::cout << "Likelyhood is " << curLikelyhood << std::endl;
+    std::cerr << "And last scale factor is " << scalFactors[ duckSeqLength ] << std::endl;
+    std::cerr << "Likelyhood is " << curLikelyhood << std::endl;
 #endif
 
     if( curLikelyhood > maxLikehood )
     {
 #ifdef DEBUG_PRED
-      std::cout << ">>>Picking up current move" << std::endl;
+      std::cerr << ">>>Picking up current move" << std::endl;
 #endif
       maxLikehood     = curLikelyhood;
       maxLikehoodHash = itHashes->first;
     }
 
 #ifdef DEBUG_PRED
-    std::cout << std::endl;
+    std::cerr << std::endl;
 #endif
   }
 
@@ -439,15 +439,15 @@ void HMM::InitTheMatrixes()
   }
 
 #ifdef DEBUG
-  std::cout << "PI" << std::endl;
+  std::cerr << "PI" << std::endl;
   PrintMatrix( PI, 1, B_N_BEHAVIORS );
   CheckSum( PI, 1, B_N_BEHAVIORS );
 
-  std::cout << std::endl << "Transitions" << std::endl;
+  std::cerr << std::endl << "Transitions" << std::endl;
   PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
   CheckSum( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
 
-  std::cout << std::endl << "Evidences" << std::endl;
+  std::cerr << std::endl << "Evidences" << std::endl;
   PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
   CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 #endif
@@ -463,7 +463,7 @@ std::vector< PROB >  HMM::Forward
   const
 {
 #ifdef DEBUG_FW
-  std::cout << "Entering Forward routine with t = " << t << std::endl;
+  std::cerr << "Entering Forward routine with t = " << t << std::endl;
 #endif
 
   PROB scalingFactor = 0;
@@ -476,7 +476,7 @@ std::vector< PROB >  HMM::Forward
   if( t == 0 )
   {
 #ifdef DEBUG_FW
-    std::cout << "FW, at t = " << t << " hits end of recursion" << std::endl;
+    std::cerr << "FW, at t = " << t << " hits end of recursion" << std::endl;
 #endif
 
     // end of recursion
@@ -513,7 +513,7 @@ std::vector< PROB >  HMM::Forward
     alphaT[ i ] *= scalingFactor;
 
 #ifdef DEBUG_FW
-  std::cout << "Alpha at t = " << t << std::endl;
+  std::cerr << "Alpha at t = " << t << std::endl;
   PrintMatrix( alphaT, 1, B_N_BEHAVIORS );
 #endif
 
@@ -537,7 +537,7 @@ std::vector< PROB > HMM::Backward
   const
 {
 #ifdef DEBUG_BW
-  std::cout << "Entering Backward routine with t = " << t << std::endl;
+  std::cerr << "Entering Backward routine with t = " << t << std::endl;
 #endif
 
   std::vector< PROB > betaT( B_N_BEHAVIORS, 0 );
@@ -548,7 +548,7 @@ std::vector< PROB > HMM::Backward
   if( t == lastT )
   {
 #ifdef DEBUG_BW
-    std::cout << "BW, at t = " << t << " hits end of recursion" << std::endl;
+    std::cerr << "BW, at t = " << t << " hits end of recursion" << std::endl;
 #endif
     // end of recursion
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
@@ -576,7 +576,7 @@ std::vector< PROB > HMM::Backward
     betaT[ i ] *= scalFactors[ t ];
 
 #ifdef DEBUG_BW
-  std::cout << "Beta at t = " << t << std::endl;
+  std::cerr << "Beta at t = " << t << std::endl;
   PrintMatrix( betaT, 1, B_N_BEHAVIORS );
 #endif
 
@@ -600,7 +600,7 @@ void HMM::ComputeGammas
   const
 {
 #ifdef DEBUG_GAM
-  std::cout << "HMM::ComputeGammas" << std::endl;
+  std::cerr << "HMM::ComputeGammas" << std::endl;
 #endif
 
   PROB denominator;
@@ -648,14 +648,14 @@ void HMM::ComputeGammas
   }
 
 #ifdef DEBUG_GAM
-  std::cout << "DiGammas from 0 to T-2 : " << diGammas.size() - 1 << std::endl;
+  std::cerr << "DiGammas from 0 to T-2 : " << diGammas.size() - 1 << std::endl;
   for( int t = 0 ; t < diGammas.size() ; t++ )
   {
     PrintMatrix( diGammas[ t ], 1, B_N_BEHAVIORS * B_N_BEHAVIORS );
     CheckSum( diGammas[ t ], 1, B_N_BEHAVIORS * B_N_BEHAVIORS );
   }
 
-  std::cout << "Gammas from 0 to T-2 :" << gammas.size() - 1 << std::endl;
+  std::cerr << "Gammas from 0 to T-2 :" << gammas.size() - 1 << std::endl;
   for( int t = 0 ; t < gammas.size() ; t++ )
   {
     PrintMatrix( gammas[ t ], 1, B_N_BEHAVIORS );
@@ -672,7 +672,7 @@ void HMM::UpdateModel
 )
 {
 #ifdef DEBUG
-  std::cout << "HMM::UpdateModel()" << std::endl;
+  std::cerr << "HMM::UpdateModel()" << std::endl;
 #endif
 
   // update PI
@@ -712,7 +712,7 @@ void HMM::UpdateModel
       for( int t = 0 ; t < gammas.size() ; t++ )
       {
         evidenceIdx = observations[ t ];
-        //std::cout << "at t = " << t << " we do obs " << (int)observations[ t ] << " which has idx " << evidenceIdx << std::endl;
+        //std::cerr << "at t = " << t << " we do obs " << (int)observations[ t ] << " which has idx " << evidenceIdx << std::endl;
 
         if( evidenceIdx == j )
         {
@@ -763,11 +763,11 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
   CDuck duck = pState.GetDuck( 0 );
 
 #ifdef DEBUG
-    std::cout << "Guess Duck " << std::endl;
+    std::cerr << "Guess Duck " << std::endl;
 #endif
 
 #ifdef DEBUG
-    std::cout << "\tCreating an HMM and learning duck " << std::endl;
+    std::cerr << "\tCreating an HMM and learning duck " << std::endl;
 #endif
     HMM model;
 
@@ -789,7 +789,7 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
   */
 
 #ifdef DEBUG
-  std::cout << "Entering Guess" << std::endl;
+  std::cerr << "Entering Guess" << std::endl;
 #endif
 
 }
