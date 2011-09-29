@@ -267,15 +267,15 @@ void HMM::Learn( CDuck const & duck )
     std::cout << std::endl << "New Evidences" << std::endl;
     PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
     CheckSum( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
-#endif
 
     std::cout << "At iteration " << nIterations
               << " Old LH is "  << oldLikelyhood
               << " new LH is " << newLikelyhood << std::endl;
+#endif
 
     nIterations++;
 
-  } while( ( newLikelyhood - oldLikelyhood ) > LEARN_TRESHOLD );
+  } while( nIterations < 25 && ( newLikelyhood - oldLikelyhood ) > LEARN_TRESHOLD );
 }
 
 CAction HMM::Predict( CDuck const & duck ) const

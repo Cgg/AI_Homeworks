@@ -32,7 +32,7 @@ class  HMM
   // constants
   public:
 
-    static PROB const LEARN_TRESHOLD = 0.001;
+    static PROB const LEARN_TRESHOLD = 0.0001;
     static PROB const MINUS_INFINITY = -1e42;
 
   // static data, common to all HMM
