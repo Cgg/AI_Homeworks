@@ -138,9 +138,9 @@ void HMM::PopulateEvidencesHashes()
     }
   }
   */
-  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
+  for( int iH = 0 ; iH < ACTION_STOP+1 ; iH++ )
   {
-    for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
+    for( int iV = 0 ; iV < ACTION_STOP+1 ; iV++ )
     {
       // ugly, ugly, ugly
       evidencesHashes.insert( std::pair< uint8_t, int >(
