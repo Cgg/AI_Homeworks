@@ -269,7 +269,7 @@ CAction HMM::Predict( CDuck const & duck ) const
 
   PROB    maxLikehood = MINUS_INFINITY;
   PROB    curLikelyhood;
-  uint8_t maxLikehoodHash = 10;
+  uint8_t maxLikehoodHash = 0;
 
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
