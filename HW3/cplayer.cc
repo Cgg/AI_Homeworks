@@ -6,8 +6,8 @@
 #include <ctime>
 #include <math.h>
 
-#define DEBUG
-#define DEBUG_PRED
+//#define DEBUG
+//#define DEBUG_PRED
 //#define DEBUG_GAM
 //#define DEBUG_EXT
 //#define DEBUG_RAND
@@ -383,7 +383,9 @@ CAction HMM::Predict( CDuck const & duck ) const
   CAction act = UnhashEvidence( maxLikehoodHash,
                          duck.GetLastAction().GetBirdNumber() );
 
+#ifdef DEBUG_PRED
   act.Print();
+#endif
 
   return act;
 }
