@@ -273,7 +273,6 @@ CAction HMM::Predict( CDuck const & duck ) const
 
   int duckSeqLength = duck.GetSeqLength();
   int duckNumber    = duck.GetAction( 0 ).GetBirdNumber();
-  int evidenceIdx;
 
   // hashes for the given sequence of evidences
   std::vector< int > observations( duckSeqLength, 0 );
