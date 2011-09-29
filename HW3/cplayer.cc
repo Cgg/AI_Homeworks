@@ -646,14 +646,14 @@ void HMM::ComputeGammas
   }
 
 #ifdef DEBUG_GAM
-  std::cout << "DiGammas from 0 to T-2 : " << diGammas.size() << std::endl;
+  std::cout << "DiGammas from 0 to T-2 : " << diGammas.size() - 1 << std::endl;
   for( int t = 0 ; t < diGammas.size() ; t++ )
   {
     PrintMatrix( diGammas[ t ], 1, B_N_BEHAVIORS * B_N_BEHAVIORS );
     CheckSum( diGammas[ t ], 1, B_N_BEHAVIORS * B_N_BEHAVIORS );
   }
 
-  std::cout << "Gammas from 0 to T-2 :" << gammas.size() << std::endl;
+  std::cout << "Gammas from 0 to T-2 :" << gammas.size() - 1 << std::endl;
   for( int t = 0 ; t < gammas.size() ; t++ )
   {
     PrintMatrix( gammas[ t ], 1, B_N_BEHAVIORS );
@@ -748,8 +748,6 @@ CPlayer::CPlayer()
 {
   srand( time( NULL ) );
 
-  GenerateUniformNoisyProba( 4 );
-
   HMM::PopulateEvidencesHashes();
 }
 
@@ -759,6 +757,20 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
    * Here you should write your clever algorithms to get the best action.
    * This skeleton never shoots.
    */
+
+  CDuck duck = pState.GetDuck( 0 );
+
+#ifdef DEBUG
+    std::cout << "Guess Duck " << std::endl;
+#endif
+
+#ifdef DEBUG
+    std::cout << "\tCreating an HMM and learning duck " << std::endl;
+#endif
+    HMM model;
+
+    model.Learn( duck );
+    return model.Predict( duck );
 
   //this line doesn't shoot any bird
   return cDontShoot;
@@ -778,24 +790,6 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
   std::cout << "Entering Guess" << std::endl;
 #endif
 
-  for(int i=0;i<pDucks.size();i++)
-  {
-#ifdef DEBUG
-    std::cout << "Guess Duck " << i << std::endl;
-#endif
-
-    if(pDucks[i].IsAlive())
-    {
-#ifdef DEBUG
-      std::cout << "\tDuck is alive" << std::endl;
-      std::cout << "\tCreating an HMM and learning duck " << i << std::endl;
-#endif
-      HMM model;
-
-      model.Learn( pDucks[ i ] );
-      model.Predict( pDucks[ i ] );
-    }
-  }
 }
 
 void CPlayer::Hit(int pDuck,ESpecies pSpecies)
