@@ -213,10 +213,13 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
 
-  int64_t itTime = due.GetCurrent().Get();
+  CTime mark;
+  int64_t itTime;
 
   do
   {
+    mark = due.GetCurrent();
+
     Forward( alphas, scalFactors, duckSeqLength-1, hashedEvidences );
     Backward( betas, scalFactors, 0, duckSeqLength-1, hashedEvidences );
 
@@ -268,11 +271,11 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
               << " new LH is " << newLikelyhood << std::endl;
 #endif
 
-    itTime = due.GetCurrent().Get() - itTime;
+    itTime = due.GetCurrent() - mark;
 
     nIterations++;
 
-  } while( ( due.Get() - itTime > 1000 ) && nIterations <= 25 || ( newLikelyhood - oldLikelyhood ) > LEARN_TRESHOLD );
+  } while( due - due.GetCurrent() > itTime );
 
   /*
   PrintMatrix( PI, 1, B_N_BEHAVIORS );
