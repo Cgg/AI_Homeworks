@@ -18,7 +18,7 @@ enum EBehavior
   B_N_BEHAVIORS   // numering element
 };
 
-typedef long double PROB;
+typedef double PROB;
 
 void PrintMatrix( std::vector< PROB > const & theMatrix, int nRow, int nCol );
 std::vector< PROB > GenerateUniformNoisyProba( int nProba );
