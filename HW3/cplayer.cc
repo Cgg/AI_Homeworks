@@ -557,7 +557,7 @@ std::vector< PROB > HMM::Backward
     {
       for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
       {
-        betaT[ i ] = TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] * EvidenceMatrix[ evidenceIdx + ( j * N_OBS ) ] * betaNext[ j ];
+        betaT[ i ] += TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] * EvidenceMatrix[ evidenceIdx + ( j * N_OBS ) ] * betaNext[ j ];
       }
     }
   }
