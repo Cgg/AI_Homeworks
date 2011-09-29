@@ -183,7 +183,7 @@ CAction HMM::UnhashEvidence( uint8_t hash, int birdNumber )
   return CAction( birdNumber, actionH, actionV, move );
 }
 
-void HMM::Learn( CDuck const & duck )
+void HMM::Learn( CDuck const & duck, CTime const & due )
 {
 #ifdef DEBUG
   std::cout << "HMM::Learn" << std::endl;
@@ -219,6 +219,8 @@ void HMM::Learn( CDuck const & duck )
   // get all hashes for the observations sequence
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
+
+  int64_t itTime = due.GetCurrent().Get();
 
   do
   {
@@ -273,9 +275,17 @@ void HMM::Learn( CDuck const & duck )
               << " new LH is " << newLikelyhood << std::endl;
 #endif
 
+    itTime = due.GetCurrent().Get() - itTime;
+
     nIterations++;
 
-  } while( nIterations < 25 && ( newLikelyhood - oldLikelyhood ) > LEARN_TRESHOLD );
+  } while( ( due.Get() - itTime > 1000 ) && nIterations <= 25 || ( newLikelyhood - oldLikelyhood ) > LEARN_TRESHOLD );
+
+  /*
+  PrintMatrix( PI, 1, B_N_BEHAVIORS );
+  PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
+  PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
+  */
 }
 
 CAction HMM::Predict( CDuck const & duck ) const
@@ -775,7 +785,7 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 #endif
     HMM model;
 
-    model.Learn( duck );
+    model.Learn( duck, pDue );
     return model.Predict( duck );
 
   //this line doesn't shoot any bird

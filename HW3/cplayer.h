@@ -32,7 +32,7 @@ class  HMM
   // constants
   public:
 
-    static PROB const LEARN_TRESHOLD = 0.0001;
+    static PROB const LEARN_TRESHOLD = 0.000001;
     static PROB const MINUS_INFINITY = -1e42;
 
   // static data, common to all HMM
@@ -64,7 +64,7 @@ class  HMM
     HMM(){ InitTheMatrixes(); }
 
     // Learn HMM parameters from a duck
-    void Learn( CDuck const & duck );
+    void Learn( CDuck const & duck, CTime const & due );
 
     // Try to predict duck's next movements
     CAction Predict( CDuck const & duck ) const;
