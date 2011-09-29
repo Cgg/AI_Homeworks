@@ -98,6 +98,7 @@ void HMM::PopulateEvidencesHashes()
 {
   int i = 0;
 
+  /*
   // the "all stop" case. / Can it really happen ? TODO
   evidencesHashes.insert( std::pair< uint8_t, int >(
     HashEvidence( ACTION_STOP, ACTION_STOP, BIRD_STOPPED ), i++ ) );
@@ -136,6 +137,16 @@ void HMM::PopulateEvidencesHashes()
         HashEvidence( (EAction)iH, (EAction)iV, (EMovement)(MOVE_DOWN | MOVE_WEST) ), i++ ) );
     }
   }
+  */
+  for( int iH = 0 ; iH < ACTION_STOP ; iH++ )
+  {
+    for( int iV = 0 ; iV < ACTION_STOP ; iV++ )
+    {
+      // ugly, ugly, ugly
+      evidencesHashes.insert( std::pair< uint8_t, int >(
+        HashEvidence( (EAction)iH, (EAction)iV ), i++ ) );
+    }
+  }
 
   // Now we can populate the actual evidence matrix, giving for each state
   // the probability of observing an evidence, given we are in the said
@@ -158,29 +169,24 @@ void HMM::PopulateEvidencesHashes()
 uint8_t HMM::HashEvidence( CAction const & action )
 {
   return HashEvidence( action.GetHAction(),
-                       action.GetVAction(),
-                       action.GetMovement() );
+                       action.GetVAction() );
 }
 
 uint8_t HMM::HashEvidence
 (
   EAction actionH,
-  EAction actionV,
-  EMovement move
+  EAction actionV
 )
 {
-  return actionH +
-         ( actionV << 2 ) +
-         ( move << 4 );
+  return actionH + ( actionV << 2 );
 }
 
 CAction HMM::UnhashEvidence( uint8_t hash, int birdNumber )
 {
   EAction   actionH = ( EAction )( hash & 0x03 );
   EAction   actionV = ( EAction )( ( hash & 0x0C ) >> 2 );
-  EMovement move    = ( EMovement )( ( hash & 0xF0 ) >> 4) ;
 
-  return CAction( birdNumber, actionH, actionV, move );
+  return CAction( birdNumber, actionH, actionV, 0 );
 }
 
 void HMM::Learn( CDuck const & duck, CTime const & due )

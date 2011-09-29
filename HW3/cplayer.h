@@ -53,8 +53,7 @@ class  HMM
     static uint8_t HashEvidence
     (
       EAction actionH,
-      EAction actionV,
-      EMovement move
+      EAction actionV
     );
 
   static CAction UnhashEvidence( uint8_t hash, int birdNumber );
