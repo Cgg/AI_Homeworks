@@ -204,17 +204,10 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
   std::vector< PROB > scalFactors( duckSeqLength, 1 );
 
   // each column is an xxx vector for a given t, from 0 to T-1
-  std::vector< std::vector< PROB > > alphas;
-  std::vector< std::vector< PROB > > betas;
-  std::vector< std::vector< PROB > > diGammas;
-  std::vector< std::vector< PROB > > gammas;
-
-  // initialize alphas and betas arrays
-  for( int i = 0 ; i < duckSeqLength ; i++ )
-    alphas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
-
-  for( int i = 0 ; i < duckSeqLength ; i++ )
-    betas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
+  std::vector< std::vector< PROB > > alphas( duckSeqLength, std::vector< PROB >( B_N_BEHAVIORS, 0 ) ) ;
+  std::vector< std::vector< PROB > > betas( duckSeqLength, std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
+  std::vector< std::vector< PROB > > diGammas( duckSeqLength - 1, std::vector< PROB >( B_N_BEHAVIORS*B_N_BEHAVIORS, 0 ) );
+  std::vector< std::vector< PROB > > gammas( duckSeqLength - 1, std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
 
   // get all hashes for the observations sequence
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
@@ -314,10 +307,7 @@ CAction HMM::Predict( CDuck const & duck ) const
 
   std::vector< PROB > scalFactors( duckSeqLength, 1 );
 
-  std::vector< std::vector< PROB > > alphas;
-
-  for( int i = 0 ; i < duckSeqLength ; i++ )
-    alphas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
+  std::vector< std::vector< PROB > > alphas( duckSeqLength, std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
 
   for( int iSeq = 0 ; iSeq < duckSeqLength ; iSeq++ )
     hashedEvidences[ iSeq ] = HashEvidence( duck.GetAction( iSeq ) );
@@ -610,10 +600,6 @@ void HMM::ComputeGammas
   std::cout << "HMM::ComputeGammas" << std::endl;
 #endif
 
-  // NEVAH FORGET
-  diGammas.clear();
-  gammas.clear();
-
   PROB denominator;
   PROB curGammaI;
   int  evidenceIdx;
@@ -623,9 +609,6 @@ void HMM::ComputeGammas
   for( int t = 0 ; t < duckSeqLength - 1 ; t++ ) // carefull, there are T-1 elements in gammas and diGammas
   {
     evidenceIdx = evidencesHashes[ observations[ t + 1 ] ];
-
-    diGammas.push_back( std::vector< PROB >( B_N_BEHAVIORS * B_N_BEHAVIORS ) );
-    gammas.push_back( std::vector< PROB >( B_N_BEHAVIORS ) );
 
     denominator = 0;
 
