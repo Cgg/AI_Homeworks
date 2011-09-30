@@ -6,6 +6,7 @@
 #include <ctime>
 #include <math.h>
 
+#define DEBUG_SHOOT
 //#define DEBUG
 //#define DEBUG_PRED
 //#define DEBUG_GAM
@@ -757,19 +758,27 @@ CPlayer::CPlayer()
 
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 {
-  CDuck duck = pState.GetDuck( 0 );
-
-#ifdef DEBUG
-    std::cerr << "Guess Duck " << std::endl;
+  if( ( pState.GetNumDucks() == 1 ) && 
+        pState.GetDuck( 0 ).GetSeqLength() == 500 )
+  {
+#ifdef DEBUG_SHOOT
+    std::cerr << "Entering practice mode" << std::endl;
 #endif
 
-#ifdef DEBUG
-    std::cerr << "\tCreating an HMM and learning duck " << std::endl;
-#endif
+    CDuck duck = pState.GetDuck( 0 );
+
     HMM model;
 
     model.Learn( duck, pDue );
+
     return model.Predict( duck );
+  }
+  else
+  {
+#ifdef DEBUG_SHOOT
+    std::cerr << "Entering one-player mode" << std::endl;
+#endif
+  }
 
   return cDontShoot;
 }
