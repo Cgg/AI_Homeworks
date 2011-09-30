@@ -291,64 +291,33 @@ CAction HMM::Predict( CDuck const & duck ) const
 #endif
 
   // make room for the N+1 observation
-  alphas.push_back( std::vector< PROB >( B_N_BEHAVIORS, 0 ) );
-  scalFactors.push_back( 1 );
 
   std::map< uint8_t, int >::const_iterator itHashes;
+
+  PROB sumProb = 0;
+  PROB maxSumProb = 0;
 
   for( itHashes = evidencesHashes.begin() ;
        itHashes != evidencesHashes.end() ;
        itHashes++ )
   {
-    scalFactors[ duckSeqLength ] = 0;
+    sumProb = 0;
 
-    // find index of action giving the maximum likehood
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
-      alphas[ duckSeqLength ][ i ] = 0;
-
       for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
       {
-        alphas[ duckSeqLength ][ i ] +=
-          alphas[ duckSeqLength - 1 ][ j ] *
-          TransitionMatrix[ j + ( B_N_BEHAVIORS*i ) ];
+        sumProb +=
+          alphas[ duckSeqLength - 1 ][ i ] *
+          TransitionMatrix[ j + ( B_N_BEHAVIORS*i ) ]*EvidenceMatrix[ itHashes->second + ( N_OBS * j ) ];
       }
-
-      alphas[ duckSeqLength ][ i ] *= 
-        EvidenceMatrix[ itHashes->second + ( N_OBS * i ) ];
-
-      scalFactors[ duckSeqLength ] += alphas[ duckSeqLength ][ i ];
     }
 
-    scalFactors[ duckSeqLength ] = 1 / scalFactors[ duckSeqLength ];
-
-    for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
-      alphas[ duckSeqLength ][ i ] =
-        alphas[ duckSeqLength ][ i ] * scalFactors[ duckSeqLength ];
-
-    // compute likelyhood
-    curLikelyhood = ComputeNewLikelyhood( scalFactors );
-
-#ifdef DEBUG_PRED
-    std::cerr << "For action " << (int)itHashes->first << " (idx " << itHashes->second << ") "
-              << " last alpha is " << std::endl;
-    PrintMatrix( alphas[ duckSeqLength ], 1, B_N_BEHAVIORS );
-    std::cerr << "And last scale factor is " << scalFactors[ duckSeqLength ] << std::endl;
-    std::cerr << "Likelyhood is " << curLikelyhood << std::endl;
-#endif
-
-    if( curLikelyhood > maxLikehood )
+    if( sumProb > maxSumProb )
     {
-#ifdef DEBUG_PRED
-      std::cerr << ">>>Picking up current move" << std::endl;
-#endif
-      maxLikehood     = curLikelyhood;
       maxLikehoodHash = itHashes->first;
+      maxSumProb = sumProb ;
     }
-
-#ifdef DEBUG_PRED
-    std::cerr << std::endl;
-#endif
   }
 
   // convert it back to CAction
