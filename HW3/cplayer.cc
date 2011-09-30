@@ -379,17 +379,17 @@ void HMM::InitTheMatrixes()
 
   PI[ 0 ] = 1.0;
 
-  TransitionMatrix[ 0 ] = 0.7;
+  TransitionMatrix[ 0 ] = 0.8;
   TransitionMatrix[ 1 ] = 0.13;
-  TransitionMatrix[ 2 ] = 0.17;
+  TransitionMatrix[ 2 ] = 0.07;
 
   TransitionMatrix[ 3 ] = 0.13;
-  TransitionMatrix[ 4 ] = 0.7;
-  TransitionMatrix[ 5 ] = 0.17;
+  TransitionMatrix[ 4 ] = 0.8;
+  TransitionMatrix[ 5 ] = 0.07;
 
   TransitionMatrix[ 6 ] = 0.13;
-  TransitionMatrix[ 7 ] = 0.17;
-  TransitionMatrix[ 8 ] = 0.7;
+  TransitionMatrix[ 7 ] = 0.07;
+  TransitionMatrix[ 8 ] = 0.8;
 
   // now we fill the evidences matrix
   assert( N_OBS > 0 );
