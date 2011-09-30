@@ -757,11 +757,6 @@ CPlayer::CPlayer()
 
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 {
-  /*
-   * Here you should write your clever algorithms to get the best action.
-   * This skeleton never shoots.
-   */
-
   CDuck duck = pState.GetDuck( 0 );
 
 #ifdef DEBUG
@@ -776,11 +771,7 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     model.Learn( duck, pDue );
     return model.Predict( duck );
 
-  //this line doesn't shoot any bird
   return cDontShoot;
-
-  //this line would predict that bird 0 is totally stopped and shoot at it
-  //return CAction(0,ACTION_STOP,ACTION_STOP,BIRD_STOPPED);
 }
 
 void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
