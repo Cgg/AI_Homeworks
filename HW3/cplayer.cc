@@ -313,6 +313,10 @@ CAction HMM::Predict( CDuck const & duck ) const
       }
     }
 
+#ifdef DEBUG_PRED
+    std::cerr << sumProb << std::endl;
+#endif
+
     if( sumProb > maxSumProb )
     {
       maxLikehoodHash = itHashes->first;
@@ -329,6 +333,54 @@ CAction HMM::Predict( CDuck const & duck ) const
 #endif
 
   return act;
+}
+
+CAction HMM::PredictShoot( CDuck const & duck ) const
+{
+  CAction predictedAct = Predict( duck );
+
+  // try to decide if we can shoot or not
+  // should I take into account the overall probability of the move ? That
+  // is, if the max proba is less than 0.5 dont do anything anyway
+
+  EMovement pMove = duck.GetLastAction().GetMovement();
+  EAction   nH    = predictedAct.GetHAction();
+  EAction   nV    = predictedAct.GetVAction();
+
+  EMovement nMove = BIRD_STOPPED;
+
+  if( pMove != BIRD_STOPPED )
+  {
+    if( pMove & ( MOVE_EAST | MOVE_WEST ) )
+    {
+      if( nH != ACTION_STOP && nV == ACTION_STOP )
+        nMove = pMove;
+      else
+        return cDontShoot;
+    }
+    else if( pMove & ( MOVE_UP | MOVE_DOWN ) )
+    {
+      if( nH == ACTION_STOP && nV != ACTION_STOP )
+        nMove = pMove;
+      else
+        return cDontShoot;
+    }
+    else
+    {
+      if( nV != ACTION_STOP )
+        nMove = (EMovement)( nMove | ( pMove & ( MOVE_UP | MOVE_DOWN ) ) );
+
+      if( nH != ACTION_STOP )
+        nMove = (EMovement)( nMove | ( pMove & ( MOVE_EAST | MOVE_DOWN ) ) );
+    }
+  }
+  else
+  {
+    if( nH != ACTION_STOP || nV != ACTION_STOP )
+      return cDontShoot;
+  }
+
+  return CAction( duck.GetLastAction().GetBirdNumber(), nH, nV, nMove );
 }
 
 void HMM::InitTheMatrixes()

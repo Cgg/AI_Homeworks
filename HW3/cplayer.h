@@ -69,6 +69,10 @@ class  HMM
     // Try to predict duck's next movements
     CAction Predict( CDuck const & duck ) const;
 
+    // This one is used in one- and multi-player mode. It involves more
+    // computation and can return cDontShoot if there is no best options.
+    CAction PredictShoot( CDuck const & duck ) const;
+
   // protected methods
   protected:
 
