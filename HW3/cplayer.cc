@@ -372,12 +372,11 @@ void HMM::InitTheMatrixes()
 
   TransitionMatrix.reserve( B_N_BEHAVIORS * B_N_BEHAVIORS );
 
-  std::vector< PROB > initPi = GenerateUniformNoisyProba( B_N_BEHAVIORS );
   std::vector< PROB > initTr;
 
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
-    PI[ i ] = initPi[ i ];
+    PI[ i ] = 0.0;
 
     initTr = GenerateUniformNoisyProba( B_N_BEHAVIORS );
 
@@ -386,6 +385,8 @@ void HMM::InitTheMatrixes()
       TransitionMatrix[ j + ( i * B_N_BEHAVIORS ) ] = initTr[ j ];
     }
   }
+
+  PI[ 0 ] = 1.0;
 
   // now we fill the evidences matrix
   assert( N_OBS > 0 );
