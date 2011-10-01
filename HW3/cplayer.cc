@@ -219,8 +219,6 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 
       std::cerr << std::endl;
     }
-#endif
-#ifdef DEBUG
     std::cerr << "New PI" << std::endl;
     PrintMatrix( PI, 1, B_N_BEHAVIORS );
     CheckSum( PI, 1, B_N_BEHAVIORS );
