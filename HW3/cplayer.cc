@@ -260,6 +260,7 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
   PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 #endif
 
+  AnalyseEvidenceMatrix();
 }
 
 CAction HMM::Predict( CDuck const & duck ) const
