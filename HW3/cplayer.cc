@@ -160,7 +160,7 @@ HMM::HMM()
   InitTheMatrixes();
 }
 
-void HMM::Learn( CDuck const & duck, CTime const & due )
+bool HMM::Learn( CDuck const & duck, CTime const & due )
 {
 #ifdef DEBUG
   std::cerr << "HMM::Learn" << std::endl;
@@ -261,6 +261,8 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 #endif
 
   AnalyseEvidenceMatrix();
+
+  return isWellKnown;
 }
 
 CAction HMM::Predict( CDuck const & duck ) const

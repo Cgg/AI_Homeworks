@@ -64,7 +64,7 @@ class  HMM
     HMM();
 
     // Learn HMM parameters from a duck
-    void Learn( CDuck const & duck, CTime const & due );
+    bool Learn( CDuck const & duck, CTime const & due );
 
     // Try to predict duck's next movements
     CAction Predict( CDuck const & duck ) const;
