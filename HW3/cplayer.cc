@@ -6,7 +6,7 @@
 #include <ctime>
 #include <math.h>
 
-#define DEBUG_SHOOT
+//#define DEBUG_SHOOT
 //#define DEBUG
 //#define DEBUG_PRED
 //#define DEBUG_GAM
