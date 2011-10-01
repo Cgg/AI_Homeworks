@@ -244,9 +244,8 @@ void HMM::Learn( CDuck const & duck, CTime const & due )
 
   }
 
-  std::cerr<<nIterations<<std::endl;
-
 #ifdef DEBUG
+  std::cerr<<nIterations<<std::endl;
   std::cerr << "Final matrices :" << std::endl;
   PrintMatrix( PI, 1, B_N_BEHAVIORS );
   PrintMatrix( TransitionMatrix, B_N_BEHAVIORS, B_N_BEHAVIORS );
