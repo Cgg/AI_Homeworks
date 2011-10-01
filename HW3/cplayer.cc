@@ -360,7 +360,15 @@ CAction HMM::PredictShoot( CDuck const & duck ) const
 
   if( pMove != BIRD_STOPPED )
   {
-    if( pMove & ( MOVE_EAST | MOVE_WEST ) )
+    if( pMove & ( MOVE_EAST | MOVE_WEST ) && pMove & ( MOVE_UP | MOVE_DOWN ) )
+    {
+      if( nV != ACTION_STOP )
+        nMove = (EMovement)( nMove | ( pMove & ( MOVE_UP | MOVE_DOWN ) ) );
+
+      if( nH != ACTION_STOP )
+        nMove = (EMovement)( nMove | ( pMove & ( MOVE_EAST | MOVE_DOWN ) ) );
+    }
+    else if( pMove & ( MOVE_EAST | MOVE_WEST ) )
     {
       if( nH != ACTION_STOP && nV == ACTION_STOP )
         nMove = pMove;
@@ -373,14 +381,6 @@ CAction HMM::PredictShoot( CDuck const & duck ) const
         nMove = pMove;
       else
         return cDontShoot;
-    }
-    else
-    {
-      if( nV != ACTION_STOP )
-        nMove = (EMovement)( nMove | ( pMove & ( MOVE_UP | MOVE_DOWN ) ) );
-
-      if( nH != ACTION_STOP )
-        nMove = (EMovement)( nMove | ( pMove & ( MOVE_EAST | MOVE_DOWN ) ) );
     }
   }
   else
