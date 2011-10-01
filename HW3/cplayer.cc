@@ -856,15 +856,16 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     {
       HMM model;
 
-      model.Learn( duck, pDue );
-
-      CAction act = model.PredictShoot( duck );
+      if( model.Learn( duck, pDue ) )
+      {
+        CAction act = model.PredictShoot( duck );
 
 #ifdef DEBUG_PS
-      act.Print();
+        act.Print();
 #endif
 
-      return act;
+        return act;
+      }
     }
   }
 
