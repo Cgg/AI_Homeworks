@@ -749,7 +749,7 @@ PROB HMM::ComputeNewLikelyhood
 
 // CPlayer implementation
 
-CPlayer::CPlayer()
+CPlayer::CPlayer() : elapsedTurns( 0 )
 {
   srand( time( NULL ) );
 
@@ -758,6 +758,8 @@ CPlayer::CPlayer()
 
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 {
+  elapsedTurns += pState.GetNumNewTurns();
+
   if( ( pState.GetNumDucks() == 1 ) && 
         pState.GetDuck( 0 ).GetSeqLength() == 500 )
   {
@@ -773,11 +775,28 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
     return model.Predict( duck );
   }
-  else
+  else if( elapsedTurns >= 350 )
   {
 #ifdef DEBUG_SHOOT
     std::cerr << "Entering one-player mode" << std::endl;
 #endif
+
+    CDuck duck = pState.GetDuck( 0 );
+
+    if( duck.IsAlive() )
+    {
+      HMM model;
+
+      model.Learn( duck, pDue );
+
+      CAction act = model.PredictShoot( duck );
+
+#ifdef DEBUG_PS
+      act.Print();
+#endif
+
+      return act;
+    }
   }
 
   return cDontShoot;
