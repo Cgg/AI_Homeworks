@@ -61,7 +61,7 @@ class  HMM
   // public methods
   public:
 
-    HMM(){ InitTheMatrixes(); }
+    HMM();
 
     // Learn HMM parameters from a duck
     void Learn( CDuck const & duck, CTime const & due );
@@ -115,6 +115,10 @@ class  HMM
 
     PROB ComputeNewLikelyhood( std::vector< PROB > const & scalFactor ) const;
 
+    // Analyse the evidence matrix to (try to) determine which behaviors
+    // the duck has
+    void AnalyseEvidenceMatrix();
+
   // protected data, HMM core
   protected:
     // Initial states probabilities, is 1 x B_N_BEHAVIORS
@@ -125,6 +129,12 @@ class  HMM
     // is B_N_BEHAVIORS x N_OBS
     std::vector< PROB > EvidenceMatrix;
 
+    bool hasBOne;
+    bool hasBTwo;
+    bool hasFeigningDeath;
+    bool hasMigrating;
+
+    bool isWellKnown;
 };
 
 class CPlayer

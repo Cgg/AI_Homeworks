@@ -150,6 +150,16 @@ CAction HMM::UnhashEvidence( uint8_t hash, int birdNumber )
   return CAction( birdNumber, actionH, actionV, 0 );
 }
 
+HMM::HMM()
+ :hasBOne( false ),
+  hasBTwo( false ),
+  hasFeigningDeath( false ),
+  hasMigrating( false ),
+  isWellKnown( false )
+{
+  InitTheMatrixes();
+}
+
 void HMM::Learn( CDuck const & duck, CTime const & due )
 {
 #ifdef DEBUG
@@ -743,6 +753,65 @@ PROB HMM::ComputeNewLikelyhood
   return -logProb;
 }
 
+void HMM::AnalyseEvidenceMatrix()
+{
+#ifdef DEBUG_ANAL
+  std::cerr << "HMM::AnalyseEvidenceMatrix" << std::endl;
+#endif
+
+  int knownBehaviors = 0;
+
+  // reset everything
+  hasBOne = hasBTwo = hasFeigningDeath = hasMigrating = false;
+
+  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
+  {
+    // First the easiest, Migrating
+    if( !hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.5 )
+    {
+      knownBehaviors++;
+      hasMigrating = true;
+      continue;
+    }
+
+    // Then try with feigning death
+    if( !hasFeigningDeath &&  EvidenceMatrix[ 6 + ( N_OBS * i ) ] > 0.7 )
+    {
+      knownBehaviors++;
+      hasFeigningDeath = true;
+      continue;
+    }
+
+    // at last the two not so well defined left behaviors
+    if( !hasBOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.25 &&
+        EvidenceMatrix[ 2 + ( N_OBS * i ) ] < 0.05 )
+    {
+      knownBehaviors++;
+      hasBOne = true;
+      continue;
+    }
+    else if( !hasBTwo )
+    {
+      knownBehaviors++;
+      hasBTwo = true;
+      continue;
+    }
+  }
+
+  isWellKnown = ( knownBehaviors == 3 );
+
+#ifdef DEBUG_ANAL
+  std::cerr << "Found " << knownBehaviors << " behaviors :" << std::endl;
+  if( hasBOne )
+    std::cerr << "Found BOne" << std::endl;
+  if( hasBTwo )
+    std::cerr << "Found BTwo" << std::endl;
+  if( hasFeigningDeath )
+    std::cerr << "Found Feigning Death" << std::endl;
+  if( hasMigrating )
+    std::cerr << "Found Migrating" << std::endl;
+#endif
+}
 
 // CPlayer implementation
 
