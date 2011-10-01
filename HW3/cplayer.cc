@@ -361,10 +361,10 @@ CAction HMM::PredictShoot( CDuck const & duck ) const
   EMovement nMove = BIRD_STOPPED;
 
 #ifdef DEBUG_PS
-  std::cout << "Previous move is : " << std::endl;
+  std::cerr << "Previous move is : " << std::endl;
   duck.GetLastAction().Print();
 
-  std::cout << "Next HAct : " << (int)nH << " ; Next VAct : " << (int)nV
+  std::cerr << "Next HAct : " << (int)nH << " ; Next VAct : " << (int)nV
             << std::endl;
 #endif
 

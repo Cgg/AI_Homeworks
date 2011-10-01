@@ -52,43 +52,43 @@ struct CAction
     void Print() const
     {
         if(IsDontShoot())
-            std::cout << "DONT SHOOT" << std::endl;
+            std::cerr << "DONT SHOOT" << std::endl;
         else
         {
-            std::cout << mBirdNumber << " ";
+            std::cerr << mBirdNumber << " ";
         
             if(IsDead())
-                std::cout << "DEAD DUCK";
+                std::cerr << "DEAD DUCK";
             else
             {
                 if(mHorz==ACTION_ACCELERATE)
-                    std::cout << "ACCELERATE ";
+                    std::cerr << "ACCELERATE ";
                 else if(mHorz==ACTION_KEEPSPEED)
-                    std::cout << "KEEPSPEED ";
+                    std::cerr << "KEEPSPEED ";
                 else 
-                    std::cout << "STOP ";
+                    std::cerr << "STOP ";
                 if(mVert==ACTION_ACCELERATE)
-                    std::cout << "ACCELERATE";
+                    std::cerr << "ACCELERATE";
                 else if(mVert==ACTION_KEEPSPEED)
-                    std::cout << "KEEPSPEED";
+                    std::cerr << "KEEPSPEED";
                 else 
-                    std::cout << "STOP";
+                    std::cerr << "STOP";
             
                 if(mMovement==BIRD_STOPPED)
-                    std::cout << " STOPPED";
+                    std::cerr << " STOPPED";
                 else
                 {
                     if(mMovement&MOVE_UP)
-                        std::cout << " UP";
+                        std::cerr << " UP";
                     if(mMovement&MOVE_DOWN)
-                        std::cout << " DOWN";
+                        std::cerr << " DOWN";
                     if(mMovement&MOVE_WEST)
-                        std::cout << " WEST";
+                        std::cerr << " WEST";
                     if(mMovement&MOVE_EAST)
-                        std::cout << " EAST";
+                        std::cerr << " EAST";
                 }
             }
-            std::cout << std::endl;
+            std::cerr << std::endl;
         }
     }
 
