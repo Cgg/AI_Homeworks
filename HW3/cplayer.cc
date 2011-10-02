@@ -821,7 +821,9 @@ void HMM::AnalyseEvidenceMatrix()
 
 // CPlayer implementation
 
-CPlayer::CPlayer() : elapsedTurns( 0 )
+CPlayer::CPlayer() :
+  elapsedTurns( 0 ),
+  nextBirdToLearn( 0 )
 {
   srand( time( NULL ) );
 
@@ -883,7 +885,6 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     CTime mark;
     int64_t timeDuck = 0;
 
-    int i = 0;
     int watchDog = 0;
 
     // Learning phase
@@ -893,24 +894,27 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     {
       mark = pDue.GetCurrent();
 
-      CDuck duck = pState.GetDuck( i );
+      CDuck duck = pState.GetDuck( nextBirdToLearn );
 
       // if we didnt already learned that one, we try
-      if( !learnedBirdsIdx[ i ] )
+      if( !learnedBirdsIdx[ nextBirdToLearn ] )
       {
-        learnedBirdsIdx[ i ] = markov[ i ]->Learn( duck, pDue );
+        learnedBirdsIdx[ nextBirdToLearn ] =
+          markov[ nextBirdToLearn ]->Learn( duck, pDue );
 
         watchDog++;
 
-        if( learnedBirdsIdx[ i ] )
+        if( learnedBirdsIdx[ nextBirdToLearn ] )
         {
-          std::cerr << "Managed to learn bird n. " << i << std::endl;
+          std::cerr << "Managed to learn bird n. " << nextBirdToLearn
+                    << std::endl;
           learnedBirds++;
           watchDog = 0;
         }
       }
 
-      i = ( i == markov.size() - 1 ? 0 : i + 1 );
+      nextBirdToLearn =
+        ( nextBirdToLearn == markov.size() - 1 ? 0 : nextBirdToLearn + 1 );
 
       timeDuck = pDue.GetCurrent() - mark;
     }

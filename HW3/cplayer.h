@@ -191,6 +191,8 @@ class CPlayer
     int elapsedTurns;
     int learnedBirds;
 
+    int nextBirdToLearn;
+
     std::vector< bool > learnedBirdsIdx;
     std::vector< int > classifiedBirds;
 };
