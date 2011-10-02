@@ -925,6 +925,8 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       std::cerr << "Fail to learn " << watchDog
                 << " birds consecutivly, skipping." << std::endl;
 
+    std::cerr << learnedBirds << std::endl;
+
     // on to with the classification phase
     if( newLearning ) // do that only if new birds have been learned
     {
@@ -974,7 +976,6 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       }
     }
 
-    std::cerr << learnedBirds << std::endl;
   }
 
   return cDontShoot;
