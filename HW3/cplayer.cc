@@ -884,10 +884,12 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     int64_t timeDuck = 0;
 
     int i = 0;
+    int watchDog = 0;
 
     // Learning phase
     // do that while we have the time
-    while( pDue - pDue.GetCurrent() > timeDuck )
+    while( pDue - pDue.GetCurrent() > timeDuck &&
+           watchDog < learningWatchdog )
     {
       mark = pDue.GetCurrent();
 
@@ -898,10 +900,13 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       {
         learnedBirdsIdx[ i ] = markov[ i ]->Learn( duck, pDue );
 
+        watchDog++;
+
         if( learnedBirdsIdx[ i ] )
         {
           std::cerr << "Managed to learn bird n. " << i << std::endl;
           learnedBirds++;
+          watchDog = 0;
         }
       }
 

@@ -141,6 +141,8 @@ class CPlayer
 {
   public:
 
+    static int const learningWatchdog = 10;
+
     ///constructor
 
     ///There is no data in the beginning, so not much should be done here.
