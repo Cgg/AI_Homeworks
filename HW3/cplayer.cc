@@ -829,7 +829,10 @@ void HMM::AnalyseEvidenceMatrix()
 
 CPlayer::CPlayer() :
   elapsedTurns( 0 ),
-  nextBirdToLearn( 0 )
+  nextBirdToLearn( 0 ),
+  lastShootedBird( 0 ),
+  shootSuccessfull( false ),
+  shootedBirds( 0 )
 {
   srand( time( NULL ) );
 
@@ -839,6 +842,7 @@ CPlayer::CPlayer() :
 
 CPlayer::~CPlayer()
 {
+  std::cerr << "Shooted birds : " << shootedBirds << std::endl;
   for( int i = 0 ; i < markov.size() ; i++ )
     delete markov[ i ];
 }
@@ -873,8 +877,6 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
       learnedBirds = 0;
 
-      std::cerr << "numduck : " << pState.GetNumDucks() << std::endl;
-
       learnedBirdsIdx.reserve( pState.GetNumDucks() );
       classifiedBirds.reserve( pState.GetNumDucks() );
 
@@ -886,6 +888,13 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       }
 
       std::cerr << markov.size() << std::endl;
+    }
+
+    if( !shootSuccessfull )
+    {
+      learnedBirdsIdx[ lastShootedBird ] = false;
+      classifiedBirds[ lastShootedBird ] = C_UNSAFE;
+      nextBirdToLearn = lastShootedBird;
     }
 
     CTime mark;
@@ -913,8 +922,10 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
         if( learnedBirdsIdx[ nextBirdToLearn ] )
         {
+#ifdef DEBUG_SHOOT
           std::cerr << "Managed to learn bird n. " << nextBirdToLearn
                     << std::endl;
+#endif
           newLearning = true;
           learnedBirds++;
           watchDog = 0;
@@ -928,15 +939,19 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     }
 
     if( watchDog == learningWatchdog )
+#ifdef DEBUG_SHOOT
       std::cerr << "Fail to learn " << watchDog
                 << " birds consecutivly, skipping." << std::endl;
+#endif
 
     std::cerr << learnedBirds << std::endl;
 
     // on to with the classification phase
     if( newLearning ) // do that only if new birds have been learned
     {
+#ifdef DEBUG_SHOOT
       std::cerr << "Entering classification phase" << std::endl;
+#endif
 
       int i = 0;
       timeDuck = 0;
@@ -950,19 +965,25 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
         // (that is, the newly learned birds)
         if( learnedBirdsIdx[ i ] && classifiedBirds[ i ] == C_UNSAFE )
         {
+#ifdef DEBUG_SHOOT
           std::cerr << "Bird " << i << " learned and not classified !" 
                     <<std::endl;
+#endif
 
           // comparing the bird with other birds
           for( int j = 0 ; j < markov.size() ; j++ )
           {
             if( i != j && learnedBirdsIdx[ j ] )
             {
+#ifdef DEBUG_SHOOT
               std::cerr << "Comparing " << i << " with " << j << std::endl;
+#endif
 
               if( *(markov[ i ]) == (*markov[ j ]) )
               {
+#ifdef DEBUG_SHOOT
                 std::cerr << "Birds are safe to shoot" << std::endl;
+#endif
 
                 classifiedBirds[ i ] = C_SAFE;
                 classifiedBirds[ j ] = C_SAFE;
@@ -970,8 +991,12 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
                 break;
               }
               else
+              {
+#ifdef DEBUG_SHOOT
                 std::cerr << "Models not equal, going to next bird"
                           << std::endl;
+#endif
+              }
             }
           }
         }
@@ -989,7 +1014,9 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     int i = 0;
     timeDuck = 0;
 
+#ifdef DEBUG_SHOOT
     std::cerr << "Let's shoot !!!" << std::endl;
+#endif
 
     while( pDue - pDue.GetCurrent() > timeDuck &&
            i < markov.size() )
@@ -1012,7 +1039,17 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       timeDuck = pDue.GetCurrent() - mark;
     }
 
+    std::cerr << maxProb << " >>> ";
     bestAct.Print();
+
+    if( bestAct == cDontShoot )
+    {
+      shootSuccessfull = true;
+    }
+    else
+    {
+      lastShootedBird = bestAct.GetBirdNumber();
+    }
 
     return bestAct;
   }
@@ -1035,6 +1072,13 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
 
 void CPlayer::Hit(int pDuck,ESpecies pSpecies)
 {
+  shootedBirds++;
+
+  shootSuccessfull = true;
+
+  if( pSpecies == SPECIES_BLACK )
+    std::cerr << "  >>>>>>>>>>>>>>>>>>>>>>>  " << std::endl;
+
   std::cerr << "HIT DUCK!!!\n";
 }
 

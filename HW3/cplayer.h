@@ -168,7 +168,7 @@ class CPlayer
 {
   public:
 
-    static int const learningWatchdog = 10;
+    static int const learningWatchdog = 20;
 
     ///constructor
 
@@ -223,6 +223,11 @@ class CPlayer
     std::vector< bool > learnedBirdsIdx;
 
     std::vector< EClassification > classifiedBirds;
+
+    int lastShootedBird;
+    bool shootSuccessfull;
+
+    int shootedBirds;
 };
 
 /*namespace ducks*/ }
