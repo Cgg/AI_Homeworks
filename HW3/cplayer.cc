@@ -789,7 +789,7 @@ void HMM::AnalyseEvidenceMatrix()
     }
 
     // at last the two not so well defined left behaviors
-    if( !hasBOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.25 &&
+    if( !hasBOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.15 &&
         EvidenceMatrix[ 2 + ( N_OBS * i ) ] < 0.05 )
     {
       knownBehaviors++;
