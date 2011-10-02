@@ -18,6 +18,12 @@ enum EBehavior
   B_N_BEHAVIORS   // numering element
 };
 
+enum EClassification
+{
+  C_SAFE,
+  C_UNSAFE
+};
+
 typedef double PROB;
 
 void PrintMatrix( std::vector< PROB > const & theMatrix, int nRow, int nCol );
@@ -194,7 +200,8 @@ class CPlayer
     int nextBirdToLearn;
 
     std::vector< bool > learnedBirdsIdx;
-    std::vector< int > classifiedBirds;
+
+    std::vector< EClassification > classifiedBirds;
 };
 
 /*namespace ducks*/ }

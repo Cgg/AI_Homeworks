@@ -875,7 +875,7 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
       {
         markov.push_back( new HMM );
-        classifiedBirds[ i ] = -1;
+        classifiedBirds[ i ] = C_UNSAFE;
         learnedBirdsIdx[ i ] = false;
       }
 
@@ -917,6 +917,11 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
         ( nextBirdToLearn == markov.size() - 1 ? 0 : nextBirdToLearn + 1 );
 
       timeDuck = pDue.GetCurrent() - mark;
+    }
+
+    // on to with the classification phase
+    while( pDue - pDue.GetCurrent() )
+    {
     }
 
     std::cerr << learnedBirds << std::endl;
