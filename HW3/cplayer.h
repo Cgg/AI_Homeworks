@@ -79,6 +79,14 @@ class  HMM
     // computation and can return cDontShoot if there is no best options.
     CAction PredictShoot( CDuck const & duck ) const;
 
+    bool operator==( HMM const & other ) const
+    {
+      return ( ( hasBOne == other.hasBOne ) &&
+               ( hasBTwo == other.hasBTwo ) &&
+               ( hasFeigningDeath == other.hasFeigningDeath ) &&
+               ( hasMigrating == other.hasMigrating ) );
+    }
+
   // protected methods
   protected:
 

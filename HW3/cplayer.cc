@@ -886,6 +886,7 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     int64_t timeDuck = 0;
 
     int watchDog = 0;
+    bool newLearning = false;
 
     // Learning phase
     // do that while we have the time
@@ -908,6 +909,7 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
         {
           std::cerr << "Managed to learn bird n. " << nextBirdToLearn
                     << std::endl;
+          newLearning = true;
           learnedBirds++;
           watchDog = 0;
         }
@@ -919,9 +921,57 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       timeDuck = pDue.GetCurrent() - mark;
     }
 
+    if( watchDog == learningWatchdog )
+      std::cerr << "Fail to learn " << watchDog
+                << " birds consecutivly, skipping." << std::endl;
+
     // on to with the classification phase
-    while( pDue - pDue.GetCurrent() )
+    if( newLearning ) // do that only if new birds have been learned
     {
+      std::cerr << "Entering classification phase" << std::endl;
+
+      int i = 0;
+      timeDuck = 0;
+
+      while( pDue - pDue.GetCurrent() > timeDuck &&
+             i < markov.size() )
+      {
+        mark = pDue.GetCurrent();
+
+        // do that only for the birds we learned and we are not sure yet
+        // (that is, the newly learned birds)
+        if( learnedBirdsIdx[ i ] && classifiedBirds[ i ] == C_UNSAFE )
+        {
+          std::cerr << "Bird " << i << " learned and not classified !" 
+                    <<std::endl;
+
+          // comparing the bird with other birds
+          for( int j = 0 ; j < markov.size() ; j++ )
+          {
+            if( i != j && learnedBirdsIdx[ j ] )
+            {
+              std::cerr << "Comparing " << i << " with " << j << std::endl;
+
+              if( *(markov[ i ]) == (*markov[ j ]) )
+              {
+                std::cerr << "Birds are safe to shoot" << std::endl;
+
+                classifiedBirds[ i ] = C_SAFE;
+                classifiedBirds[ j ] = C_SAFE;
+
+                break;
+              }
+              else
+                std::cerr << "Models not equal, going to next bird"
+                          << std::endl;
+            }
+          }
+        }
+
+        i = ( i < markov.size() ? i + 1 : 0 );
+
+        timeDuck = pDue.GetCurrent() - mark;
+      }
     }
 
     std::cerr << learnedBirds << std::endl;
