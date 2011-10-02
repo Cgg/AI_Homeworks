@@ -146,6 +146,8 @@ class CPlayer
     ///There is no data in the beginning, so not much should be done here.
     CPlayer();
 
+    ~CPlayer();
+
     ///shoot!
 
     ///This is the function where you should do all your work.
@@ -182,7 +184,13 @@ class CPlayer
 
     protected:
 
+    std::vector< HMM * > markov;
+
     int elapsedTurns;
+    int learnedBirds;
+
+    std::vector< bool > learnedBirdsIdx;
+    std::vector< int > classifiedBirds;
 };
 
 /*namespace ducks*/ }

@@ -7,7 +7,9 @@
 #include <math.h>
 
 //#define DEBUG_SHOOT
+//#define DEBUG_PS
 //#define DEBUG
+//#define DEBUG_ANAL
 //#define DEBUG_PRED
 //#define DEBUG_GAM
 //#define DEBUG_EXT
@@ -193,7 +195,8 @@ bool HMM::Learn( CDuck const & duck, CTime const & due )
   int64_t itTime = 0;
 
   while( ( due - due.GetCurrent() > itTime ) && 
-             newLikelyhood > oldLikelyhood )
+             newLikelyhood > oldLikelyhood   &&
+             nIterations < 50 )
   {
     mark = due.GetCurrent();
 
@@ -770,7 +773,7 @@ void HMM::AnalyseEvidenceMatrix()
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
     // First the easiest, Migrating
-    if( !hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.5 )
+    if( !hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.45 )
     {
       knownBehaviors++;
       hasMigrating = true;
@@ -825,6 +828,13 @@ CPlayer::CPlayer() : elapsedTurns( 0 )
   HMM::PopulateEvidencesHashes();
 }
 
+
+CPlayer::~CPlayer()
+{
+  for( int i = 0 ; i < markov.size() ; i++ )
+    delete markov[ i ];
+}
+
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 {
   elapsedTurns += pState.GetNumNewTurns();
@@ -844,29 +854,63 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
     return model.Predict( duck );
   }
-  else if( elapsedTurns >= 350 )
+  else if( elapsedTurns >= 250 )
   {
 #ifdef DEBUG_SHOOT
     std::cerr << "Entering one-player mode" << std::endl;
 #endif
-
-    CDuck duck = pState.GetDuck( 0 );
-
-    if( duck.IsAlive() )
+    if( markov.size() == 0 )
     {
-      HMM model;
+      // first time we get here in oneP mode.
 
-      if( model.Learn( duck, pDue ) )
+      learnedBirds = 0;
+
+      std::cerr << "numduck : " << pState.GetNumDucks() << std::endl;
+
+      learnedBirdsIdx.reserve( pState.GetNumDucks() );
+      classifiedBirds.reserve( pState.GetNumDucks() );
+
+      for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
       {
-        CAction act = model.PredictShoot( duck );
-
-#ifdef DEBUG_PS
-        act.Print();
-#endif
-
-        return act;
+        markov.push_back( new HMM );
+        classifiedBirds[ i ] = -1;
+        learnedBirdsIdx[ i ] = false;
       }
+
+      std::cerr << markov.size() << std::endl;
     }
+
+    CTime mark;
+    int64_t timeDuck = 0;
+
+    int i = 0;
+
+    // Learning phase
+    // do that while we have the time
+    while( pDue - pDue.GetCurrent() > timeDuck )
+    {
+      mark = pDue.GetCurrent();
+
+      CDuck duck = pState.GetDuck( i );
+
+      // if we didnt already learned that one, we try
+      if( !learnedBirdsIdx[ i ] )
+      {
+        learnedBirdsIdx[ i ] = markov[ i ]->Learn( duck, pDue );
+
+        if( learnedBirdsIdx[ i ] )
+        {
+          std::cerr << "Managed to learn bird n. " << i << std::endl;
+          learnedBirds++;
+        }
+      }
+
+      i = ( i == markov.size() - 1 ? 0 : i + 1 );
+
+      timeDuck = pDue.GetCurrent() - mark;
+    }
+
+    std::cerr << learnedBirds << std::endl;
   }
 
   return cDontShoot;
