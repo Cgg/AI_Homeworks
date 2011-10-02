@@ -9,6 +9,8 @@
 namespace ducks
 {
 
+typedef double PROB;
+
 enum EBehavior
 {
   B_MIGRATING,
@@ -24,7 +26,18 @@ enum EClassification
   C_UNSAFE
 };
 
-typedef double PROB;
+struct SPrediction
+{
+  SPrediction( PROB prob, CAction act ) :
+    predictionProb( prob ),
+    theAction( act )
+  {}
+
+  PROB predictionProb;
+  CAction theAction;
+};
+
+static const SPrediction DONT_SHOOT( 0, cDontShoot );
 
 void PrintMatrix( std::vector< PROB > const & theMatrix, int nRow, int nCol );
 std::vector< PROB > GenerateUniformNoisyProba( int nProba );
@@ -73,11 +86,11 @@ class  HMM
     bool Learn( CDuck const & duck, CTime const & due );
 
     // Try to predict duck's next movements
-    CAction Predict( CDuck const & duck ) const;
+    SPrediction Predict( CDuck const & duck ) const;
 
     // This one is used in one- and multi-player mode. It involves more
     // computation and can return cDontShoot if there is no best options.
-    CAction PredictShoot( CDuck const & duck ) const;
+    SPrediction PredictShoot( CDuck const & duck ) const;
 
     bool operator==( HMM const & other ) const
     {

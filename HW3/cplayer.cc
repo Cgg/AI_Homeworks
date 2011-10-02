@@ -268,7 +268,7 @@ bool HMM::Learn( CDuck const & duck, CTime const & due )
   return isWellKnown;
 }
 
-CAction HMM::Predict( CDuck const & duck ) const
+SPrediction HMM::Predict( CDuck const & duck ) const
 {
 #ifdef DEBUG_PRED
   std::cerr << "HMM::Predict" << std::endl;
@@ -346,20 +346,22 @@ CAction HMM::Predict( CDuck const & duck ) const
   act.Print();
 #endif
 
-  return act;
+  SPrediction result( maxSumProb, act );
+
+  return result;
 }
 
-CAction HMM::PredictShoot( CDuck const & duck ) const
+SPrediction HMM::PredictShoot( CDuck const & duck ) const
 {
-  CAction predictedAct = Predict( duck );
+  SPrediction predictedAct = Predict( duck );
 
   // try to decide if we can shoot or not
   // should I take into account the overall probability of the move ? That
   // is, if the max proba is less than 0.5 dont do anything anyway
 
   EMovement pMove = duck.GetLastAction().GetMovement();
-  EAction   nH    = predictedAct.GetHAction();
-  EAction   nV    = predictedAct.GetVAction();
+  EAction   nH    = predictedAct.theAction.GetHAction();
+  EAction   nV    = predictedAct.theAction.GetVAction();
 
   EMovement nMove = BIRD_STOPPED;
 
@@ -386,23 +388,26 @@ CAction HMM::PredictShoot( CDuck const & duck ) const
       if( nH != ACTION_STOP && nV == ACTION_STOP )
         nMove = pMove;
       else
-        return cDontShoot;
+        return DONT_SHOOT;
     }
     else if( pMove & ( MOVE_UP | MOVE_DOWN ) )
     {
       if( nH == ACTION_STOP && nV != ACTION_STOP )
         nMove = pMove;
       else
-        return cDontShoot;
+        return DONT_SHOOT;
     }
   }
   else
   {
     if( nH != ACTION_STOP || nV != ACTION_STOP )
-      return cDontShoot;
+      return DONT_SHOOT;
   }
 
-  return CAction( duck.GetLastAction().GetBirdNumber(), nH, nV, nMove );
+  SPrediction result( predictedAct.predictionProb,
+      CAction( duck.GetLastAction().GetBirdNumber(), nH, nV, nMove ) );
+
+  return result;
 }
 
 void HMM::InitTheMatrixes()
@@ -854,9 +859,9 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
     model.Learn( duck, pDue );
 
-    return model.Predict( duck );
+    return model.Predict( duck ).theAction;
   }
-  else if( elapsedTurns >= 250 )
+  else if( elapsedTurns >= 400 )
   {
 #ifdef DEBUG_SHOOT
     std::cerr << "Entering one-player mode" << std::endl;
@@ -970,12 +975,45 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
           }
         }
 
-        i = ( i < markov.size() ? i + 1 : 0 );
+        i++;
 
         timeDuck = pDue.GetCurrent() - mark;
       }
     }
 
+    // onto with the shooting phase
+    CAction bestAct = cDontShoot;
+    PROB maxProb = 0;
+
+    int i = 0;
+    timeDuck = 0;
+
+    std::cerr << "Let's shoot !!!" << std::endl;
+
+    while( pDue - pDue.GetCurrent() > timeDuck &&
+           i < markov.size() )
+    {
+      mark = pDue.GetCurrent();
+
+      if( pState.GetDuck( i ).IsAlive() && classifiedBirds[ i ] == C_SAFE )
+      {
+        SPrediction pred = markov[ i ]->PredictShoot( pState.GetDuck( i ) );
+
+        if( pred.predictionProb > maxProb )
+        {
+          maxProb = pred.predictionProb;
+          bestAct = pred.theAction;
+        }
+      }
+
+      i++;
+
+      timeDuck = pDue.GetCurrent() - mark;
+    }
+
+    bestAct.Print();
+
+    return bestAct;
   }
 
   return cDontShoot;
@@ -996,7 +1034,7 @@ void CPlayer::Guess(std::vector<CDuck> &pDucks,const CTime &pDue)
 
 void CPlayer::Hit(int pDuck,ESpecies pSpecies)
 {
-  std::cout << "HIT DUCK!!!\n";
+  std::cerr << "HIT DUCK!!!\n";
 }
 
 /*namespace ducks*/ }
