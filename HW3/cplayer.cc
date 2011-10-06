@@ -852,6 +852,8 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 {
   elapsedTurns += pState.GetNumNewTurns();
 
+  std::cerr << "Turn " << elapsedTurns << std::endl;
+
   if( ( pState.GetNumDucks() == 1 ) && 
         pState.GetDuck( 0 ).GetSeqLength() == 500 )
   {
