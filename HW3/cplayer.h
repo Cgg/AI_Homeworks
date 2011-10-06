@@ -169,6 +169,7 @@ class CPlayer
   public:
 
     static int const learningWatchdog = 20;
+    static int const TURN_LIMIT = 100;
 
     ///constructor
 

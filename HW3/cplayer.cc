@@ -867,7 +867,7 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
     return model.Predict( duck ).theAction;
   }
-  else if( elapsedTurns >= 400 )
+  else if( elapsedTurns >= TURN_LIMIT )
   {
 #ifdef DEBUG_SHOOT
     std::cerr << "Entering one-player mode" << std::endl;
