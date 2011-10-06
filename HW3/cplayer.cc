@@ -966,7 +966,8 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
         // do that only for the birds we learned and we are not sure yet
         // (that is, the newly learned birds)
-        if( learnedBirdsIdx[ i ] && classifiedBirds[ i ] == C_UNSAFE )
+        if( learnedBirdsIdx[ i ] && pState.GetDuck( i ).IsAlive() &&
+            classifiedBirds[ i ] == C_UNSAFE )
         {
 #ifdef DEBUG_SHOOT
           std::cerr << "Bird " << i << " learned and not classified !" 
