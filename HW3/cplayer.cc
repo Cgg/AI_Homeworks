@@ -832,7 +832,8 @@ CPlayer::CPlayer() :
   nextBirdToLearn( 0 ),
   lastShootedBird( 0 ),
   shootSuccessfull( false ),
-  shootedBirds( 0 )
+  shootedBirds( 0 ),
+  rampage( false )
 {
   srand( time( NULL ) );
 
@@ -1023,7 +1024,8 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     {
       mark = pDue.GetCurrent();
 
-      if( pState.GetDuck( i ).IsAlive() && classifiedBirds[ i ] == C_SAFE )
+      if( pState.GetDuck( i ).IsAlive() &&
+          ( classifiedBirds[ i ] == C_SAFE || rampage ) )
       {
         SPrediction pred = markov[ i ]->PredictShoot( pState.GetDuck( i ) );
 
@@ -1077,7 +1079,10 @@ void CPlayer::Hit(int pDuck,ESpecies pSpecies)
   shootSuccessfull = true;
 
   if( pSpecies == SPECIES_BLACK )
+  {
+    rampage = true;
     std::cerr << "  >>>>>>>>>>>>>>>>>>>>>>>  " << std::endl;
+  }
 
   std::cerr << "HIT DUCK!!!\n";
 }

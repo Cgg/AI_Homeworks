@@ -228,6 +228,8 @@ class CPlayer
     bool shootSuccessfull;
 
     int shootedBirds;
+
+    bool rampage;
 };
 
 /*namespace ducks*/ }
