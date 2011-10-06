@@ -916,10 +916,10 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
           maxProb = pred.predictionProb;
           bestAct = pred.theAction;
         }
-
-        if( pDue - pDue.GetCurrent() < 5000 )
-          break;
       }
+
+      if( pDue - pDue.GetCurrent() < 5000 )
+        break;
     }
 
     std::cerr << maxProb;
