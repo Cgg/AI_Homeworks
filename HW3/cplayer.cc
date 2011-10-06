@@ -828,12 +828,7 @@ void HMM::AnalyseEvidenceMatrix()
 
 CPlayer::CPlayer() :
   elapsedTurns( 0 ),
-  nextBirdToLearn( 0 ),
-  lastShootedBird( 0 ),
-  shootSuccessfull( false ),
-  aliveDucks( 0 ),
-  shootedBirds( 0 ),
-  rampage( false )
+  shootedBirds( 0 )
 {
   srand( time( NULL ) );
 
@@ -844,6 +839,9 @@ CPlayer::CPlayer() :
 CPlayer::~CPlayer()
 {
   std::cerr << "Shooted birds : " << shootedBirds << std::endl;
+
+  for( int i = 0 ; i < markov.size() ; i++ )
+    delete markov[ i ];
 }
 
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
@@ -876,14 +874,9 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     {
       // first time we get here in oneP mode.
 
-      learnedBirds = 0;
-
-      learnedBirdsIdx.reserve( pState.GetNumDucks() );
-
       for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
       {
-        markov.push_back( (HMM*)42 );
-        learnedBirdsIdx[ i ] = false;
+        markov.push_back( new HMM );
       }
 
       std::cerr << "Mark size : " << markov.size() << std::endl;
@@ -900,11 +893,9 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
       if( duck.IsAlive() )
       {
-        HMM markov;
+        markov[ i ]->Learn( duck, pDue );
 
-        markov.Learn( duck, pDue );
-
-        SPrediction pred = markov.PredictShoot( duck );
+        SPrediction pred = markov[ i ]->PredictShoot( duck );
 
         if( pred.predictionProb > maxProb )
         {
@@ -944,11 +935,8 @@ void CPlayer::Hit(int pDuck,ESpecies pSpecies)
 {
   shootedBirds++;
 
-  shootSuccessfull = true;
-
   if( pSpecies == SPECIES_BLACK )
   {
-    rampage = true;
     std::cerr << "  >>>>>>>>>>>>>>>>>>>>>>>  " << std::endl;
   }
 

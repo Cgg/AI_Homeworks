@@ -218,19 +218,7 @@ class CPlayer
 
     int elapsedTurns;
 
-    int aliveDucks;
-    int learnedBirds;
-
-    int nextBirdToLearn;
-
-    std::vector< bool > learnedBirdsIdx;
-
-    int lastShootedBird;
-    bool shootSuccessfull;
-
     int shootedBirds;
-
-    bool rampage;
 };
 
 /*namespace ducks*/ }
