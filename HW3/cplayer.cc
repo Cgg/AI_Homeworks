@@ -6,7 +6,7 @@
 #include <ctime>
 #include <math.h>
 
-//#define DEBUG_SHOOT
+#define DEBUG_SHOOT
 //#define DEBUG_PS
 //#define DEBUG
 //#define DEBUG_ANAL
@@ -265,7 +265,7 @@ bool HMM::Learn( CDuck const & duck, CTime const & due )
 
   AnalyseEvidenceMatrix();
 
-  return isWellKnown;
+  return true;//isWellKnown;
 }
 
 SPrediction HMM::Predict( CDuck const & duck ) const
@@ -423,10 +423,9 @@ void HMM::InitTheMatrixes()
 
   std::vector< PROB > initTr;
 
-  for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
-    PI[ i ] = 0.0;
-
-  PI[ 0 ] = 1.0;
+  PI[ 0 ] = 0.8;
+  PI[ 1 ] = 0.17;
+  PI[ 2 ] = 0.03;
 
   TransitionMatrix[ 0 ] = 0.8;
   TransitionMatrix[ 1 ] = 0.13;
@@ -832,6 +831,7 @@ CPlayer::CPlayer() :
   nextBirdToLearn( 0 ),
   lastShootedBird( 0 ),
   shootSuccessfull( false ),
+  aliveDucks( 0 ),
   shootedBirds( 0 ),
   rampage( false )
 {
@@ -844,8 +844,6 @@ CPlayer::CPlayer() :
 CPlayer::~CPlayer()
 {
   std::cerr << "Shooted birds : " << shootedBirds << std::endl;
-  for( int i = 0 ; i < markov.size() ; i++ )
-    delete markov[ i ];
 }
 
 CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
@@ -881,180 +879,47 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       learnedBirds = 0;
 
       learnedBirdsIdx.reserve( pState.GetNumDucks() );
-      classifiedBirds.reserve( pState.GetNumDucks() );
 
       for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
       {
-        markov.push_back( new HMM );
-        classifiedBirds[ i ] = C_UNSAFE;
+        markov.push_back( (HMM*)42 );
         learnedBirdsIdx[ i ] = false;
       }
 
-      std::cerr << markov.size() << std::endl;
+      std::cerr << "Mark size : " << markov.size() << std::endl;
     }
 
-    if( !shootSuccessfull )
-    {
-      learnedBirdsIdx[ lastShootedBird ] = false;
-      classifiedBirds[ lastShootedBird ] = C_UNSAFE;
-      nextBirdToLearn = lastShootedBird;
-    }
+    std::cerr << "Shooted birds : " << shootedBirds << std::endl;
 
-    CTime mark;
-    int64_t timeDuck = 0;
-
-    int watchDog = 0;
-    bool newLearning = false;
-
-    // Learning phase
-    // do that while we have the time
-    while( pDue - pDue.GetCurrent() > timeDuck &&
-           watchDog < learningWatchdog )
-    {
-      mark = pDue.GetCurrent();
-
-      CDuck duck = pState.GetDuck( nextBirdToLearn );
-
-      // if we didnt already learned that one, we try
-      if( !learnedBirdsIdx[ nextBirdToLearn ] )
-      {
-        learnedBirdsIdx[ nextBirdToLearn ] =
-          markov[ nextBirdToLearn ]->Learn( duck, pDue );
-
-        watchDog++;
-
-        if( learnedBirdsIdx[ nextBirdToLearn ] )
-        {
-#ifdef DEBUG_SHOOT
-          std::cerr << "Managed to learn bird n. " << nextBirdToLearn
-                    << std::endl;
-#endif
-          newLearning = true;
-          learnedBirds++;
-          watchDog = 0;
-        }
-      }
-
-      nextBirdToLearn =
-        ( nextBirdToLearn == markov.size() - 1 ? 0 : nextBirdToLearn + 1 );
-
-      timeDuck = pDue.GetCurrent() - mark;
-    }
-
-    if( watchDog == learningWatchdog )
-#ifdef DEBUG_SHOOT
-      std::cerr << "Fail to learn " << watchDog
-                << " birds consecutivly, skipping." << std::endl;
-#endif
-
-    std::cerr << learnedBirds << std::endl;
-
-    // on to with the classification phase
-    if( newLearning ) // do that only if new birds have been learned
-    {
-#ifdef DEBUG_SHOOT
-      std::cerr << "Entering classification phase" << std::endl;
-#endif
-
-      int i = 0;
-      timeDuck = 0;
-
-      while( pDue - pDue.GetCurrent() > timeDuck &&
-             i < markov.size() )
-      {
-        mark = pDue.GetCurrent();
-
-        // do that only for the birds we learned and we are not sure yet
-        // (that is, the newly learned birds)
-        if( learnedBirdsIdx[ i ] && pState.GetDuck( i ).IsAlive() &&
-            classifiedBirds[ i ] == C_UNSAFE )
-        {
-#ifdef DEBUG_SHOOT
-          std::cerr << "Bird " << i << " learned and not classified !" 
-                    <<std::endl;
-#endif
-
-          // comparing the bird with other birds
-          for( int j = 0 ; j < markov.size() ; j++ )
-          {
-            if( i != j && learnedBirdsIdx[ j ] )
-            {
-#ifdef DEBUG_SHOOT
-              std::cerr << "Comparing " << i << " with " << j << std::endl;
-#endif
-
-              if( *(markov[ i ]) == (*markov[ j ]) )
-              {
-#ifdef DEBUG_SHOOT
-                std::cerr << "Birds are safe to shoot" << std::endl;
-#endif
-
-                classifiedBirds[ i ] = C_SAFE;
-                classifiedBirds[ j ] = C_SAFE;
-
-                break;
-              }
-              else
-              {
-#ifdef DEBUG_SHOOT
-                std::cerr << "Models not equal, going to next bird"
-                          << std::endl;
-#endif
-              }
-            }
-          }
-        }
-
-        i++;
-
-        timeDuck = pDue.GetCurrent() - mark;
-      }
-    }
-
-    // onto with the shooting phase
     CAction bestAct = cDontShoot;
     PROB maxProb = 0;
 
-    int i = 0;
-    timeDuck = 0;
-
-#ifdef DEBUG_SHOOT
-    std::cerr << "Let's shoot !!!" << std::endl;
-#endif
-
-    while( pDue - pDue.GetCurrent() > timeDuck &&
-           i < markov.size() )
+    for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
     {
-      mark = pDue.GetCurrent();
+      CDuck duck = pState.GetDuck( i );
 
-      if( pState.GetDuck( i ).IsAlive() &&
-          ( classifiedBirds[ i ] == C_SAFE || rampage ) )
+      if( duck.IsAlive() )
       {
-        SPrediction pred = markov[ i ]->PredictShoot( pState.GetDuck( i ) );
+        HMM markov;
+
+        markov.Learn( duck, pDue );
+
+        SPrediction pred = markov.PredictShoot( duck );
 
         if( pred.predictionProb > maxProb )
         {
           maxProb = pred.predictionProb;
           bestAct = pred.theAction;
         }
+
+        if( pDue - pDue.GetCurrent() < 1000 )
+          break;
       }
-
-      i++;
-
-      timeDuck = pDue.GetCurrent() - mark;
     }
 
-    std::cerr << maxProb << " >>> ";
+    std::cerr << maxProb;
     bestAct.Print();
-
-    if( bestAct == cDontShoot )
-    {
-      shootSuccessfull = true;
-    }
-    else
-    {
-      lastShootedBird = bestAct.GetBirdNumber();
-    }
+    std::cerr << std::endl;
 
     return bestAct;
   }

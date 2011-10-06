@@ -9,7 +9,7 @@
 namespace ducks
 {
 
-typedef double PROB;
+typedef long double PROB;
 
 enum EBehavior
 {
@@ -217,13 +217,13 @@ class CPlayer
     std::vector< HMM * > markov;
 
     int elapsedTurns;
+
+    int aliveDucks;
     int learnedBirds;
 
     int nextBirdToLearn;
 
     std::vector< bool > learnedBirdsIdx;
-
-    std::vector< EClassification > classifiedBirds;
 
     int lastShootedBird;
     bool shootSuccessfull;
