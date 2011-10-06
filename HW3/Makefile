@@ -1,2 +1,2 @@
 all:
-	g++ -g -o client *.cc
+	g++ -g -Wall -Wextra -o client *.cc

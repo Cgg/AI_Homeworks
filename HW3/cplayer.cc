@@ -153,16 +153,11 @@ CAction HMM::UnhashEvidence( uint8_t hash, int birdNumber )
 }
 
 HMM::HMM()
- :hasBOne( false ),
-  hasBTwo( false ),
-  hasFeigningDeath( false ),
-  hasMigrating( false ),
-  isWellKnown( false )
 {
   InitTheMatrixes();
 }
 
-bool HMM::Learn( CDuck const & duck, CTime const & due )
+SBehavior HMM::Learn( CDuck const & duck, CTime const & due )
 {
 #ifdef DEBUG
   std::cerr << "HMM::Learn" << std::endl;
@@ -263,9 +258,7 @@ bool HMM::Learn( CDuck const & duck, CTime const & due )
   PrintMatrix( EvidenceMatrix, B_N_BEHAVIORS, N_OBS );
 #endif
 
-  AnalyseEvidenceMatrix();
-
-  return true;//isWellKnown;
+  return AnalyseEvidenceMatrix();
 }
 
 SPrediction HMM::Predict( CDuck const & duck ) const
@@ -764,76 +757,67 @@ PROB HMM::ComputeNewLikelyhood
   return -logProb;
 }
 
-void HMM::AnalyseEvidenceMatrix()
+SBehavior HMM::AnalyseEvidenceMatrix()
 {
 #ifdef DEBUG_ANAL
   std::cerr << "HMM::AnalyseEvidenceMatrix" << std::endl;
 #endif
 
-  int knownBehaviors = 0;
-
-  // reset everything
-  hasBOne = hasBTwo = hasFeigningDeath = hasMigrating = false;
+  SBehavior result( false, false, false, false );
 
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
     // First the easiest, Migrating
-    if( !hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.45 )
+    if( !result.hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.45 )
     {
-      knownBehaviors++;
-      hasMigrating = true;
+      result.hasMigrating = true;
       continue;
     }
 
     // Then try with feigning death
-    if( !hasFeigningDeath &&  EvidenceMatrix[ 6 + ( N_OBS * i ) ] > 0.7 )
+    if( !result.hasFeigning &&  EvidenceMatrix[ 6 + ( N_OBS * i ) ] > 0.7 )
     {
-      knownBehaviors++;
-      hasFeigningDeath = true;
+      result.hasFeigning = true;
       continue;
     }
 
     // at last the two not so well defined left behaviors
-    if( !hasBOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.15 &&
+    if( !result.hasOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.15 &&
         EvidenceMatrix[ 2 + ( N_OBS * i ) ] < 0.05 )
     {
-      knownBehaviors++;
-      hasBOne = true;
+      result.hasOne = true;
       continue;
     }
-    else if( !hasBTwo )
+    else if( !result.hasTwo )
     {
-      knownBehaviors++;
-      hasBTwo = true;
+      result.hasTwo = true;
       continue;
     }
   }
 
-  isWellKnown = ( knownBehaviors == 3 );
-
 #ifdef DEBUG_ANAL
   std::cerr << "Found " << knownBehaviors << " behaviors :" << std::endl;
-  if( hasBOne )
+  if( hasOne )
     std::cerr << "Found BOne" << std::endl;
-  if( hasBTwo )
+  if( hasTwo )
     std::cerr << "Found BTwo" << std::endl;
-  if( hasFeigningDeath )
+  if( hasFeigning )
     std::cerr << "Found Feigning Death" << std::endl;
   if( hasMigrating )
     std::cerr << "Found Migrating" << std::endl;
 #endif
+
+  return result;
 }
 
 // CPlayer implementation
 
 CPlayer::CPlayer() :
   elapsedTurns( 0 ),
-  nextBirdToLearn( 0 ),
-  lastShootedBird( 0 ),
   shootSuccessfull( false ),
-  aliveDucks( 0 ),
   shootedBirds( 0 ),
-  rampage( false )
+  rampage( false ),
+  onePInitialized( false )
 {
   srand( time( NULL ) );
 
@@ -872,31 +856,104 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 #ifdef DEBUG_SHOOT
     std::cerr << "Entering one-player mode" << std::endl;
 #endif
-    if( markov.size() == 0 )
+    if( !onePInitialized )
     {
-      // first time we get here in oneP mode.
+      onePInitialized = true;
 
-      learnedBirds = 0;
-
-      learnedBirdsIdx.reserve( pState.GetNumDucks() );
-
-      for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
-      {
-        markov.push_back( (HMM*)42 );
-        learnedBirdsIdx[ i ] = false;
-      }
-
-      std::cerr << "Mark size : " << markov.size() << std::endl;
+      behaviors.reserve( pState.GetNumDucks() );
     }
+
+    std::list< int >::iterator duckIt;
+    std::list< int >::iterator duckIt2;
+    std::list< int >::iterator duckItToErase;
+
+    CTime mark;
+    int64_t timeDuck = 0;
+
+    int duckIdx;
 
     std::cerr << "Shooted birds : " << shootedBirds << std::endl;
 
+    // if there is no birds left to learn, start again
+    if( birdsToShoot.empty() )
+    {
+      unlearnedBirdsIdx.clear();
+      learnedBirdsIdx.clear();
+      birdsToShoot.clear();
+
+      for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
+      {
+        if( pState.GetDuck( i ).IsAlive() )
+        {
+          unlearnedBirdsIdx.push_back( i );
+        }
+      }
+    }
+
+    // learning phase
+    while( !unlearnedBirdsIdx.empty() &&
+           pDue - pDue.GetCurrent() > timeDuck )
+    {
+      mark = pDue.GetCurrent();
+
+      // take an unlearned bird to learn it
+      duckIdx = unlearnedBirdsIdx.back();
+      unlearnedBirdsIdx.pop_back();
+
+      HMM markov;
+
+      behaviors[ duckIdx ] = markov.Learn( pState.GetDuck( duckIdx ), pDue );
+
+      learnedBirdsIdx.push_back( duckIdx );
+
+      timeDuck = pDue.GetCurrent() - mark;
+    }
+
+    // classification phase
+      for( duckIt = learnedBirdsIdx.begin() ; duckIt != learnedBirdsIdx.end() ;
+           duckIt++ )
+      {
+        if( pDue - pDue.GetCurrent() < timeDuck )
+          break;
+
+        mark = pDue.GetCurrent();
+
+        for( duckIt2 = learnedBirdsIdx.begin() ; duckIt2 != learnedBirdsIdx.end() ;
+             duckIt2++ )
+        {
+          // here compare learned models and update canShoot array
+          if( *duckIt != *duckIt2 )
+          {
+            if( behaviors[ *duckIt ] == behaviors[ *duckIt2 ] )
+            {
+              birdsToShoot.push_back( *duckIt );
+              birdsToShoot.push_back( *duckIt2 );
+
+              duckIt = learnedBirdsIdx.erase( duckIt );
+              duckIt2 = learnedBirdsIdx.erase( duckIt2 );
+
+              break;
+            }
+          }
+        }
+
+        timeDuck = pDue.GetCurrent() - mark;
+      }
+
+    // shooting phase
     CAction bestAct = cDontShoot;
     PROB maxProb = 0;
 
-    for( int i = 0 ; i < pState.GetNumDucks() ; i++ )
+    duckItToErase = birdsToShoot.end();
+
+    for( duckIt = birdsToShoot.begin() ; duckIt != birdsToShoot.end() ; duckIt++ )
     {
-      CDuck duck = pState.GetDuck( i );
+      if( pDue - pDue.GetCurrent() < timeDuck )
+        break;
+
+      mark = pDue.GetCurrent();
+
+      CDuck duck = pState.GetDuck( *duckIt );
 
       if( duck.IsAlive() )
       {
@@ -910,12 +967,16 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
         {
           maxProb = pred.predictionProb;
           bestAct = pred.theAction;
+
+          duckItToErase = duckIt;
         }
 
-        if( pDue - pDue.GetCurrent() < 1000 )
-          break;
+        timeDuck = pDue.GetCurrent() - mark;
       }
     }
+
+    if( duckItToErase != birdsToShoot.end() )
+      birdsToShoot.erase( duckItToErase );
 
     std::cerr << maxProb;
     bestAct.Print();

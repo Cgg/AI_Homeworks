@@ -4,6 +4,7 @@
 #include "ctime.h"
 #include "cstate.h"
 #include <vector>
+#include <list>
 #include <map>
 
 namespace ducks
@@ -24,6 +25,41 @@ enum EClassification
 {
   C_SAFE,
   C_UNSAFE
+};
+
+struct SBehavior
+{
+  SBehavior( bool hasOne, bool hasTwo, bool hasFeigning, bool hasMigrating ):
+    hasOne( hasOne ),
+    hasTwo( hasTwo ),
+    hasFeigning( hasFeigning ),
+    hasMigrating( hasMigrating )
+  {
+    if( hasOne )
+      knownBehaviors++;
+    if( hasTwo )
+      knownBehaviors++;
+    if( hasFeigning )
+      knownBehaviors++;
+    if( hasMigrating )
+      knownBehaviors++;
+  }
+
+  bool operator==( SBehavior const & other )
+  {
+    return ( //knownBehaviors == 3 &&
+             hasOne == other.hasOne &&
+             hasTwo == other.hasTwo &&
+             hasFeigning == other.hasFeigning &&
+             hasMigrating == other.hasMigrating );
+  }
+
+  int knownBehaviors;
+
+  bool hasOne;
+  bool hasTwo;
+  bool hasFeigning;
+  bool hasMigrating;
 };
 
 struct SPrediction
@@ -83,7 +119,7 @@ class  HMM
     HMM();
 
     // Learn HMM parameters from a duck
-    bool Learn( CDuck const & duck, CTime const & due );
+    SBehavior Learn( CDuck const & duck, CTime const & due );
 
     // Try to predict duck's next movements
     SPrediction Predict( CDuck const & duck ) const;
@@ -91,14 +127,6 @@ class  HMM
     // This one is used in one- and multi-player mode. It involves more
     // computation and can return cDontShoot if there is no best options.
     SPrediction PredictShoot( CDuck const & duck ) const;
-
-    bool operator==( HMM const & other ) const
-    {
-      return ( ( hasBOne == other.hasBOne ) &&
-               ( hasBTwo == other.hasBTwo ) &&
-               ( hasFeigningDeath == other.hasFeigningDeath ) &&
-               ( hasMigrating == other.hasMigrating ) );
-    }
 
   // protected methods
   protected:
@@ -144,7 +172,7 @@ class  HMM
 
     // Analyse the evidence matrix to (try to) determine which behaviors
     // the duck has
-    void AnalyseEvidenceMatrix();
+    SBehavior AnalyseEvidenceMatrix();
 
   // protected data, HMM core
   protected:
@@ -155,13 +183,6 @@ class  HMM
     std::vector< PROB > TransitionMatrix;
     // is B_N_BEHAVIORS x N_OBS
     std::vector< PROB > EvidenceMatrix;
-
-    bool hasBOne;
-    bool hasBTwo;
-    bool hasFeigningDeath;
-    bool hasMigrating;
-
-    bool isWellKnown;
 };
 
 class CPlayer
@@ -214,18 +235,16 @@ class CPlayer
 
     protected:
 
-    std::vector< HMM * > markov;
+    bool onePInitialized;
 
     int elapsedTurns;
 
-    int aliveDucks;
-    int learnedBirds;
+    std::vector< int > unlearnedBirdsIdx;
+    std::list< int > learnedBirdsIdx;
+    std::list< int > birdsToShoot;
 
-    int nextBirdToLearn;
+    std::vector< SBehavior > behaviors;
 
-    std::vector< bool > learnedBirdsIdx;
-
-    int lastShootedBird;
     bool shootSuccessfull;
 
     int shootedBirds;
