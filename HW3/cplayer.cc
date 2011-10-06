@@ -763,36 +763,46 @@ SBehavior HMM::AnalyseEvidenceMatrix()
   std::cerr << "HMM::AnalyseEvidenceMatrix" << std::endl;
 #endif
 
-  SBehavior result( false, false, false, false );
+  bool hasMigrating = false;
+  bool hasFeigning  = false;
+  bool hasOne       = false;
+  bool hasTwo       = false;
 
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
     // First the easiest, Migrating
-    if( !result.hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.45 )
+    if( !hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.30 )
     {
-      result.hasMigrating = true;
+      hasMigrating = true;
       continue;
     }
 
     // Then try with feigning death
-    if( !result.hasFeigning &&  EvidenceMatrix[ 6 + ( N_OBS * i ) ] > 0.7 )
+    if( !hasFeigning &&  EvidenceMatrix[ 6 + ( N_OBS * i ) ] > 0.6 )
     {
-      result.hasFeigning = true;
+      hasFeigning = true;
       continue;
     }
 
     // at last the two not so well defined left behaviors
-    if( !result.hasOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.15 &&
+    if( !hasOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.15 &&
         EvidenceMatrix[ 2 + ( N_OBS * i ) ] < 0.05 )
     {
-      result.hasOne = true;
+      hasOne = true;
       continue;
     }
-    else if( !result.hasTwo )
+    else if( !hasTwo )
     {
-      result.hasTwo = true;
+      hasTwo = true;
       continue;
     }
+  }
+
+  if( ( hasFeigning || hasMigrating ) &&
+      !( hasFeigning && hasMigrating ) )
+  {
+    hasOne = true;
+    hasTwo = true;
   }
 
 #ifdef DEBUG_ANAL
@@ -806,6 +816,8 @@ SBehavior HMM::AnalyseEvidenceMatrix()
   if( hasMigrating )
     std::cerr << "Found Migrating" << std::endl;
 #endif
+
+  SBehavior result( hasOne, hasTwo, hasFeigning, hasMigrating );
 
   return result;
 }
@@ -860,6 +872,8 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     {
       onePInitialized = true;
 
+      classificationDone = true;
+
       behaviors.reserve( pState.GetNumDucks() );
     }
 
@@ -875,8 +889,10 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
     std::cerr << "Shooted birds : " << shootedBirds << std::endl;
 
     // if there is no birds left to learn, start again
-    if( birdsToShoot.empty() )
+    if( birdsToShoot.empty() && classificationDone )
     {
+      classificationDone = false;
+
       unlearnedBirdsIdx.clear();
       learnedBirdsIdx.clear();
       birdsToShoot.clear();
@@ -909,7 +925,15 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
       timeDuck = pDue.GetCurrent() - mark;
     }
 
+    timeDuck = 0;
+
     // classification phase
+    if( !classificationDone )
+    {
+      int oldSize = learnedBirdsIdx.size();
+
+      std::cerr << oldSize;
+
       for( duckIt = learnedBirdsIdx.begin() ; duckIt != learnedBirdsIdx.end() ;
            duckIt++ )
       {
@@ -918,14 +942,19 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
         mark = pDue.GetCurrent();
 
+        std::cerr << "going with " << *duckIt << std::endl;
+
         for( duckIt2 = learnedBirdsIdx.begin() ; duckIt2 != learnedBirdsIdx.end() ;
              duckIt2++ )
         {
           // here compare learned models and update canShoot array
           if( *duckIt != *duckIt2 )
           {
+          std::cerr << "comparing " << *duckIt << " and " << *duckIt2 << std::endl;
             if( behaviors[ *duckIt ] == behaviors[ *duckIt2 ] )
             {
+              std::cerr << "gotcha !" << std::endl;
+
               birdsToShoot.push_back( *duckIt );
               birdsToShoot.push_back( *duckIt2 );
 
@@ -934,11 +963,19 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
 
               break;
             }
+
+            std::cerr << "done"<< std::endl;
           }
         }
 
         timeDuck = pDue.GetCurrent() - mark;
       }
+
+      std::cerr << " " << learnedBirdsIdx.size() << std::endl;
+
+      if( oldSize == learnedBirdsIdx.size() )
+        classificationDone = true;
+    }
 
     // shooting phase
     CAction bestAct = cDontShoot;

@@ -35,6 +35,8 @@ struct SBehavior
     hasFeigning( hasFeigning ),
     hasMigrating( hasMigrating )
   {
+    knownBehaviors = 0;
+
     if( hasOne )
       knownBehaviors++;
     if( hasTwo )
@@ -43,6 +45,22 @@ struct SBehavior
       knownBehaviors++;
     if( hasMigrating )
       knownBehaviors++;
+  }
+
+  void Print()
+  {
+    std::cerr << knownBehaviors << " ";
+
+    if( hasOne )
+      std::cerr << "hasOne ";
+    if( hasTwo )
+      std::cerr << "hasTwo ";
+    if( hasFeigning )
+      std::cerr << "Feigning ";
+    if( hasMigrating )
+      std::cerr << "Migrating";
+
+    std::cerr << std::endl;
   }
 
   bool operator==( SBehavior const & other )
@@ -236,6 +254,8 @@ class CPlayer
     protected:
 
     bool onePInitialized;
+
+    bool classificationDone;
 
     int elapsedTurns;
 
