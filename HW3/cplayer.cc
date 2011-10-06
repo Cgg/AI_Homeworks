@@ -159,7 +159,18 @@ HMM::HMM()
   hasMigrating( false ),
   isWellKnown( false )
 {
+  PI = new std::vector< PROB >();
+  TransitionMatrix = new std::vector< PROB >();
+  EvidenceMatrix = new std::vector< PROB >();
+
   InitTheMatrixes();
+}
+
+HMM::~HMM()
+{
+  delete PI;
+  delete TransitionMatrix;
+  delete EvidenceMatrix;
 }
 
 bool HMM::Learn( CDuck const & duck, CTime const & due )
@@ -323,7 +334,8 @@ SPrediction HMM::Predict( CDuck const & duck ) const
       {
         sumProb +=
           alphas[ duckSeqLength - 1 ][ i ] *
-          TransitionMatrix[ j + ( B_N_BEHAVIORS*i ) ]*EvidenceMatrix[ itHashes->second + ( N_OBS * j ) ];
+          TransitionMatrix->at( j + ( B_N_BEHAVIORS*i ) ) *
+          EvidenceMatrix->at( itHashes->second + ( N_OBS * j ) );
       }
     }
 
@@ -417,32 +429,29 @@ void HMM::InitTheMatrixes()
   // hunting.
 
   // First the initial state matrix and the transition matrix
-  PI.reserve( B_N_BEHAVIORS );
+  PI = new std::vector< PROB >( B_N_BEHAVIORS, 0.0 );
 
-  TransitionMatrix.reserve( B_N_BEHAVIORS * B_N_BEHAVIORS );
+  TransitionMatrix = new std::vector< PROB >( B_N_BEHAVIORS * B_N_BEHAVIORS,
+                                              0.0 );
 
-  std::vector< PROB > initTr;
+  PI->at( 2 ) = 1.0;
 
-  PI[ 0 ] = 0.8;
-  PI[ 1 ] = 0.17;
-  PI[ 2 ] = 0.03;
+  TransitionMatrix->at( 0 ) = 0.8;
+  TransitionMatrix->at( 1 ) = 0.13;
+  TransitionMatrix->at( 2 ) = 0.07;
 
-  TransitionMatrix[ 0 ] = 0.8;
-  TransitionMatrix[ 1 ] = 0.13;
-  TransitionMatrix[ 2 ] = 0.07;
+  TransitionMatrix->at( 3 ) = 0.13;
+  TransitionMatrix->at( 4 ) = 0.8;
+  TransitionMatrix->at( 5 ) = 0.07;
 
-  TransitionMatrix[ 3 ] = 0.13;
-  TransitionMatrix[ 4 ] = 0.8;
-  TransitionMatrix[ 5 ] = 0.07;
-
-  TransitionMatrix[ 6 ] = 0.13;
-  TransitionMatrix[ 7 ] = 0.07;
-  TransitionMatrix[ 8 ] = 0.8;
+  TransitionMatrix->at( 6 ) = 0.13;
+  TransitionMatrix->at( 7 ) = 0.07;
+  TransitionMatrix->at( 8 ) = 0.8;
 
   // now we fill the evidences matrix
   assert( N_OBS > 0 );
 
-  EvidenceMatrix.reserve( B_N_BEHAVIORS * N_OBS );
+  EvidenceMatrix = new std::vector< PROB >( B_N_BEHAVIORS * N_OBS, 0.0 );
 
   // at the beginning we assume for every state that we could equally
   // observe every evidence in it. (Of course this is not true but that's
@@ -455,7 +464,7 @@ void HMM::InitTheMatrixes()
     {
       initObs = GenerateUniformNoisyProba( N_OBS );
 
-      EvidenceMatrix[ j + ( N_OBS * i ) ] = initObs[ j ];
+      EvidenceMatrix->at( j + ( N_OBS * i ) ) = initObs[ j ];
     }
   }
 
@@ -503,7 +512,9 @@ std::vector< PROB >  HMM::Forward
     // end of recursion
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
-      alphaT[ i ] = PI[ i ] * EvidenceMatrix[ evidenceIdx + ( i * N_OBS ) ];
+      alphaT[ i ] = PI->at( i ) *
+                    EvidenceMatrix->at( evidenceIdx + ( i * N_OBS ) );
+
       scalingFactor += alphaT[ i ];
     }
   }
@@ -516,9 +527,9 @@ std::vector< PROB >  HMM::Forward
     for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
     {
       for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
-        alphaT[ i ] += alphaPrev[ j ] * TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ];
+        alphaT[ i ] += alphaPrev[ j ] * TransitionMatrix->at( j + ( B_N_BEHAVIORS * i ) );
 
-      alphaT[ i ] *= EvidenceMatrix[ evidenceIdx + ( i * N_OBS ) ];
+      alphaT[ i ] *= EvidenceMatrix->at( evidenceIdx + ( i * N_OBS ) );
 
       scalingFactor += alphaT[ i ];
     }
@@ -587,7 +598,9 @@ std::vector< PROB > HMM::Backward
     {
       for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
       {
-        betaT[ i ] += TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] * EvidenceMatrix[ evidenceIdx + ( j * N_OBS ) ] * betaNext[ j ];
+        betaT[ i ] += TransitionMatrix->at( j + ( B_N_BEHAVIORS * i ) ) * 
+                EvidenceMatrix->at( evidenceIdx + ( j * N_OBS ) ) *
+                betaNext[ j ];
       }
     }
   }
@@ -641,8 +654,8 @@ void HMM::ComputeGammas
       for( int j = 0 ; j < B_N_BEHAVIORS ; j++ )
       {
        denominator += alphas[ t ][ i ] *
-                       TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
-                       EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
+                       TransitionMatrix->at( j + ( B_N_BEHAVIORS * i ) ) *
+                       EvidenceMatrix->at( evidenceIdx + ( N_OBS * j ) ) *
                        betas[ t + 1 ][ j ];
       }
     }
@@ -655,8 +668,8 @@ void HMM::ComputeGammas
       {
         diGammas[ t ][ j + ( B_N_BEHAVIORS * i ) ] =
           ( alphas[ t ][ i ] *
-            TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] *
-            EvidenceMatrix[ evidenceIdx + ( N_OBS * j ) ] *
+            TransitionMatrix->at( j + ( B_N_BEHAVIORS * i ) ) *
+            EvidenceMatrix->at( evidenceIdx + ( N_OBS * j ) ) *
             betas[ t + 1 ][ j ] )
           /
           denominator;   // ugly, ugly, uglyyyy
@@ -698,7 +711,7 @@ void HMM::UpdateModel
 
   // update PI
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
-    PI[ i ] = gammas[ 0 ][ i ];
+    PI->at( i ) = gammas[ 0 ][ i ];
 
   // update the transition matrix
 
@@ -719,7 +732,8 @@ void HMM::UpdateModel
         denominator += gammas[ t ][ i ];
       }
 
-      TransitionMatrix[ j + ( B_N_BEHAVIORS * i ) ] = numerator / denominator;
+      TransitionMatrix->at( j + ( B_N_BEHAVIORS * i ) ) = 
+        numerator / denominator;
     }
   }
 
@@ -743,7 +757,7 @@ void HMM::UpdateModel
         denominator += gammas[ t ][ i ];
       }
 
-      EvidenceMatrix[ j + ( N_OBS * i ) ] = numerator / denominator;
+      EvidenceMatrix->at( j + ( N_OBS * i ) ) = numerator / denominator;
     }
   }
 }
@@ -778,7 +792,7 @@ void HMM::AnalyseEvidenceMatrix()
   for( int i = 0 ; i < B_N_BEHAVIORS ; i++ )
   {
     // First the easiest, Migrating
-    if( !hasMigrating && EvidenceMatrix[ 5 + ( N_OBS * i ) ] > 0.45 )
+    if( !hasMigrating && EvidenceMatrix->at( 5 + ( N_OBS * i ) ) > 0.45 )
     {
       knownBehaviors++;
       hasMigrating = true;
@@ -786,7 +800,7 @@ void HMM::AnalyseEvidenceMatrix()
     }
 
     // Then try with feigning death
-    if( !hasFeigningDeath &&  EvidenceMatrix[ 6 + ( N_OBS * i ) ] > 0.7 )
+    if( !hasFeigningDeath &&  EvidenceMatrix->at( 6 + ( N_OBS * i ) ) > 0.7 )
     {
       knownBehaviors++;
       hasFeigningDeath = true;
@@ -794,8 +808,8 @@ void HMM::AnalyseEvidenceMatrix()
     }
 
     // at last the two not so well defined left behaviors
-    if( !hasBOne && EvidenceMatrix[ 0 + ( N_OBS * i ) ] > 0.15 &&
-        EvidenceMatrix[ 2 + ( N_OBS * i ) ] < 0.05 )
+    if( !hasBOne && EvidenceMatrix->at( 0 + ( N_OBS * i ) ) > 0.15 &&
+        EvidenceMatrix->at( 2 + ( N_OBS * i ) ) < 0.05 )
     {
       knownBehaviors++;
       hasBOne = true;
@@ -903,7 +917,7 @@ CAction CPlayer::Shoot(const CState &pState,const CTime &pDue)
           bestAct = pred.theAction;
         }
 
-        if( pDue - pDue.GetCurrent() < 1000 )
+        if( pDue - pDue.GetCurrent() < 5000 )
           break;
       }
     }

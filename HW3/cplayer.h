@@ -81,6 +81,7 @@ class  HMM
   public:
 
     HMM();
+    ~HMM();
 
     // Learn HMM parameters from a duck
     bool Learn( CDuck const & duck, CTime const & due );
@@ -149,12 +150,12 @@ class  HMM
   // protected data, HMM core
   protected:
     // Initial states probabilities, is 1 x B_N_BEHAVIORS
-    std::vector< PROB > PI;
+    std::vector< PROB > * PI;
 
     // is B_N_BEHAVIORS x B_N_BEHAVIORS
-    std::vector< PROB > TransitionMatrix;
+    std::vector< PROB > * TransitionMatrix;
     // is B_N_BEHAVIORS x N_OBS
-    std::vector< PROB > EvidenceMatrix;
+    std::vector< PROB > * EvidenceMatrix;
 
     bool hasBOne;
     bool hasBTwo;
